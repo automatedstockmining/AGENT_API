@@ -11,3 +11,4 @@ requests
 trafilatura
 pillow
 flask
+langchain_community
