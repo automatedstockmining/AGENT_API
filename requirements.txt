@@ -1,0 +1,13 @@
+
+matplotlib
+langchain
+openai
+gradio
+huggingface_hub
+google-api-python-client
+google-search-results
+tiktoken
+requests
+trafilatura
+pillow
+flask
