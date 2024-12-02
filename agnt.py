@@ -350,3 +350,6 @@ async def chat(query: Query):
     except Exception as e:
         # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the AGENT_API!"}
