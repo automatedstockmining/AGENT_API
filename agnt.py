@@ -329,7 +329,15 @@ from pydantic import BaseModel
 
 # Initialize FastAPI
 app = FastAPI()
-
+# CORS Configuration
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,  # Allow cookies or Authorization headers if needed
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 # Define the input model
 class Query(BaseModel):
     message: str
