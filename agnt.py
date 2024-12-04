@@ -354,7 +354,7 @@ async def chat(query: Query):
     try:
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
-        return {"response": response}
+        return {"response": response[:-3]}
     except Exception as e:
         # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
