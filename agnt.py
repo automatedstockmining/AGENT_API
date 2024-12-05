@@ -529,6 +529,7 @@ def generate_chart_img(request: str) -> str:
         }]
     )
     resp = response.choices[0].message.content
+    print(resp)
     dictionary_resp = json.loads(resp)
 
     # Fetch and upload the chart image
