@@ -515,6 +515,7 @@ def generate_chart_img(request: str) -> str:
             'role': 'user',
             'content': f'''based off of {request} Generate a Python dictionary with parameters for the CHART-IMG API based on the user's request.
             Include the following keys:
+            - do not inlude """python json or anything similar as it will ruin the function. simply return the dictionary with nothing around it no commas etc
             - symbol (str): The TradingView symbol (e.g., "BINANCE:BTCUSDT").
             - interval (str): The chart interval (e.g., "1D", "1H").
             - theme (str): Chart theme ("dark" or "light").
