@@ -365,7 +365,7 @@ def fetch_financial_data(req: str) -> str:
     temperature=0,
     messages=[{
         'role': 'user',
-        'content': f'gather the numerical data needed to answer {req} from {texted_data}, return the numbers and as little explanation as possible except for a few words to explain what the numebrs are. FOR EXAMPLE, ALWAYS INCLUDE DATES WHERE APPLICABLE NEXT TO NUMBERS AND TEXT SAYING WHAT THE NUMBER IOS BEFORE NUMBERS. IF THE DATA IS NOT PROVIDED RETURN : USE WEB_BROWSE_TOOL AND NOTHING ELSE' }]
+        'content': f'gather the numerical data needed to answer {req} from {texted_data}, return the numbers and as little explanation as possible except for a few words to explain what the numebrs are. FOR EXAMPLE, ALWAYS INCLUDE DATES WHERE APPLICABLE NEXT TO NUMBERS AND TEXT SAYING WHAT THE NUMBER IOS BEFORE NUMBERS. IF THE DATA IS NOT PROVIDED RETURN : USE WEB_BROWSE_TOOL AND NOTHING ELSE. ALSO RETURN USE_WEB_BROWSE_TOOL IF THE INPUT WAS ON CRYPTO AND NOT STOCKS' }]
     )
     print(summary_response.choices[0].message.content)
     return summary_response.choices[0].message.content
@@ -479,7 +479,7 @@ def fetch_and_upload_chart(symbol, interval, range, theme, studies, chart_style)
         return f"Error: {e}"
 
 # Example usage
-def generate_chart_img(request):
+def generate_chart_img(request: str) -> str:
     """
     Generate a chart image based on the user's request and upload it to Catbox.
 
