@@ -508,7 +508,7 @@ def generate_chart_img(request: str) -> str:
         - Add this function to a custom tool for generating and visualizing financial charts.
         - The agent should route user requests related to chart generation to this tool.
     """
-    client = OpenAI(os.getenv('OPENAI_API_KEY'))
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     response = client.chat.completions.create(
         model='gpt-4o',
         messages=[{
