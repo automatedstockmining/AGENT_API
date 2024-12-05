@@ -540,7 +540,7 @@ def generate_chart_img(request: str) -> str:
         studies=dictionary_resp['studies'],
         chart_style=dictionary_resp['style']
     )
-    return catbox_url
+    return str(catbox_url)
 
 
 
