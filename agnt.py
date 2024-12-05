@@ -291,6 +291,98 @@ from langchain.memory import ConversationBufferMemory
 from langchain.agents import initialize_agent, AgentType
 from langchain.tools import Tool
 
+
+from langchain.tools import tool, Tool
+import openai
+import requests
+
+# Initialize OpenAI client
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+embedding_function = OpenAIEmbeddings(api_key=key)
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.document_loaders import TextLoader
+# API Key for Financial Modeling Prep
+fmp = os.getenv('FMP_API_KEY')
+db = Chroma(persist_directory='./newfmpdocs_embedding_db/',embedding_function=embedding_function)
+
+@tool
+def fetch_financial_data(req: str) -> str:
+    """
+    THIS TOOL SHOULD ALWAYS BE USED FIRST IF USER IS ASKING ABOUT SOMETHING RELATED TO COMPANIES OR FINANCE
+    Fetches financial data by determining the appropriate Financial Modeling Prep (FMP) API endpoint
+    based on the user's query and contextual information stored in a similarity search database.
+
+    Args:
+        req (str): The user request specifying the financial data to be retrieved.
+
+    Returns:
+        str: The response from the FMP API, containing the requested financial data in text format.
+
+    Functionality:
+        1. Searches a database for the most relevant document using similarity search.
+        2. Utilizes OpenAI's GPT model to identify the exact FMP API endpoint required for the query.
+        3. Constructs the API request URL and appends the API key.
+        4. Sends the request to the FMP API and retrieves the data.
+    """
+    # Retrieve relevant content from the database
+    docs = db.similarity_search(req, k =5)
+    search_content = docs[0].page_content
+    print(search_content)
+    # Generate the API endpoint using GPT
+    from datetime import datetime
+
+    message = client.chat.completions.create(
+        model='gpt-4o-mini',
+        temperature=0,
+        messages=[{
+            'role': 'user',
+            'content': f'based off of {req} and this data: {search_content} and the fact that the current date is {datetime.today().strftime('%Y-%m-%d')} '
+                       f'keep in mind that the current date is {print(datetime.today().strftime('%Y-%m-%d'))} when you make a request involving the current date'
+                       f'return the financial modelling prep endpoint that will give the data needed to answer the question. '
+                       f'RETURN SIMPLY THE FULL ENDPOINT AND NOTHING ELSE, WITH NO """ OR COMMAS AROUND IT. '
+                       f'whenever the user asks for the current anything make 100% sure that you include the current date in the request: {datetime.today().strftime('%Y-%m-%d')} '
+        }]
+    )
+    url = message.choices[0].message.content.strip()
+    
+    # Append API key to the URL
+    if '?' in url:
+        url = f'{url}&apikey={fmp}'
+    else:
+        url = f'{url}?apikey={fmp}'
+    print(url)
+    # Fetch data from the API
+    response = requests.get(url)
+    texted_data = response.text
+
+    texted_data = truncate_with_qwen(texted_data)
+    print(texted_data)
+    summary_response = client.chat.completions.create(
+    model='gpt-4o-mini',
+    temperature=0,
+    messages=[{
+        'role': 'user',
+        'content': f'gather the numerical data needed to answer {req} from {texted_data}, return the numbers and as little explanation as possible except for a few words to explain what the numebrs are. FOR EXAMPLE, ALWAYS INCLUDE DATES WHERE APPLICABLE NEXT TO NUMBERS AND TEXT SAYING WHAT THE NUMBER IOS BEFORE NUMBERS. IF THE DATA IS NOT PROVIDED RETURN : USE WEB_BROWSE_TOOL AND NOTHING ELSE' }]
+    )
+    print(summary_response.choices[0].message.content)
+    return summary_response.choices[0].message.content
+
+# Define the tool for LangChain usage
+financial_data_tool = Tool(
+    name="financial_data_tool",
+    func=fetch_financial_data,
+    description="""
+    THIS TOOL SHOULD ALWAYS BE USED FIRST IF USER IS ASKING ABOUT SOMETHING RELATED TO COMPANIES OR FINANCE
+    This tool fetches financial data from the Financial Modeling Prep (FMP) API by determining the correct
+    API endpoint using OpenAI's GPT model and contextual similarity search. Provide a clear request
+    (e.g., 'current price of cisco stock') to retrieve relevant data.
+    """
+)
+
+
 # Initialize the LangChain agent
 llm = ChatOpenAI(
     api_key=key,
@@ -302,7 +394,7 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 
 # Example tools (e.g., plotting and web browsing)
 
-all_tools = [plotting_tool, web_browse_tool]
+all_tools = [plotting_tool, web_browse_tool,financial_data_tool]
 
 agent = initialize_agent(
     tools=all_tools,
