@@ -340,7 +340,7 @@ def fetch_financial_data(req: str) -> str:
         messages=[{
             'role': 'user',
             'content': f'based off of {req} and this data: {search_content} and the fact that the current date is {datetime.today().strftime('%Y-%m-%d')} '
-                       f'keep in mind that the current date is {print(datetime.today().strftime('%Y-%m-%d'))} when you make a request involving the current date'
+                       f'keep in mind that the current date is {datetime.today().strftime('%Y-%m-%d')} when you make a request involving the current date'
                        f'return the financial modelling prep endpoint that will give the data needed to answer the question. '
                        f'RETURN SIMPLY THE FULL ENDPOINT AND NOTHING ELSE, WITH NO """ OR COMMAS AROUND IT. '
                        f'whenever the user asks for the current anything make 100% sure that you include the current date in the request: {datetime.today().strftime('%Y-%m-%d')} '
@@ -382,6 +382,172 @@ financial_data_tool = Tool(
     """
 )
 
+######Chart_img_tool
+
+
+import requests
+
+# Your CHART-IMG API Key
+API_KEY = os.getenv('CHART_IMG_TOKEN')
+
+# API endpoint for Advanced Chart
+API_URL = "https://api.chart-img.com/v1/tradingview/advanced-chart"
+
+
+import requests
+
+def upload_to_catbox(file_path):
+    """
+    Uploads an image to Catbox and returns the URL.
+
+    Args:
+        file_path (str): Path to the image file to upload.
+
+    Returns:
+        str: URL of the uploaded image or error message.
+    """
+    # Catbox API endpoint
+    CATBOX_API_URL = "https://catbox.moe/user/api.php"
+    
+    # File to upload
+    files = {
+        "fileToUpload": open(file_path, "rb")  # Open the file in binary mode
+    }
+    
+    # Data for the POST request
+    data = {
+        "reqtype": "fileupload"  # Request type
+    }
+
+    try:
+        # Make the POST request to Catbox
+        response = requests.post(CATBOX_API_URL, data=data, files=files)
+        
+        # Check for successful upload
+        if response.status_code == 200:
+            # Catbox returns the URL directly in the response body
+            return response.text.strip()
+        else:
+            return f"Error: Failed to upload file. Status code: {response.status_code}"
+    except Exception as e:
+        return f"Error: {e}"
+
+# Function to fetch and save the chart
+def fetch_advanced_chart(symbol, interval, range,  theme, studies, chart_style, output_file="advanced_chart.png"):
+    """
+    Fetches a chart with technical indicators and saves it as an image.
+    
+    Args:
+        symbol (str): The TradingView symbol (e.g., "BINANCE:BTCUSDT").
+        interval (str): The chart interval (e.g., "1D", "1H").
+        theme (str): Chart theme, "light" or "dark".
+        studies (list): List of technical indicators (e.g., ["MA", "RSI", "BB"]).
+        chart_style (str): Style of the chart, e.g., "candle", "line".
+        output_file (str): File name for saving the chart image.
+
+    """
+    # Define the request parameters
+    params = {
+        "symbol": symbol,         # Symbol for the chart
+        "interval": interval,     # Interval of the chart
+        "theme": theme,           # Theme of the chart
+        "studies": studies,       # List of technical indicators
+        "timezone": "Etc/UTC",    # Chart timezone
+        "width": 800,             # Chart width in pixels
+        "height": 600,            # Chart height in pixels
+        "format": "png",          # Image format
+        "style": chart_style,
+        "range": range     # Chart style (candlestick, line, etc.)
+    }
+
+    # Authorization header
+    headers = {
+        "Authorization": f"Bearer {API_KEY}"
+    }
+
+    # Send the request to the CHART-IMG API
+    response = requests.get(API_URL, headers=headers, params=params)
+
+    # Check the response and save the chart to a file
+    if response.status_code == 200:
+        with open(output_file, "wb") as file:
+            file.write(response.content)
+        print(f"Chart saved as '{output_file}'.")
+    else:
+        print(f"Failed to fetch chart: {response.status_code} - {response.text}")
+
+# Example usage: Generate a BTC/USDT chart with MA, RSI, and BB indicators
+
+import openai
+from openai import OpenAI
+import json
+@tool
+def generate_chart_img(request: str) -> str:
+    """
+    Generate a trading chart image with the CHART-IMG API based on user specifications and uploads it to Catbox.
+
+    Args:
+        request (str): A user-friendly description of the chart, including the symbol, interval, theme, style, 
+                       and any technical indicators or other preferences.
+
+    Returns:
+        str: URL of the generated and uploaded chart image.
+    """
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    request = client.chat.completions.create(
+        model = 'gpt-4o',
+        messages = [{'role':'user','content': f'''based off of {request} Generate a Python dictionary with parameters for the CHART-IMG API based on the user's request.
+    Include the following keys:
+    - symbol (str): The TradingView symbol (e.g., "BINANCE:BTCUSDT").
+    - interval (str): The chart interval (e.g., "1D", "1H").
+    - theme (str): Chart theme ("dark" or "light").
+    - studies (list): List of technical indicators (e.g., ["MA", "RSI", "BB"]).
+    - style (str): Chart style ("candle", "line", etc.).
+    - width (int): Image width in pixels (minimum 320).
+    - height (int): Image height in pixels (minimum 220).
+    - format (str): Image format ("png" or "jpeg").
+    - range (str): Chart range (e.g., "1M", "6M").
+    Return only the raw Python dictionary, without explanation or additional text. DO NOT RETURN ''PYTHON OR SIMILAR JUST THE RAW DICTIONARY
+    Do NOT include the words "python," "code," or anything other than the raw dictionary in your response.
+
+
+    '''}]
+    )
+    resp = request.choices[0].message.content
+    print(resp)
+    dictionary_resp = json.loads(resp)
+    fetch_advanced_chart(
+    symbol=dictionary_resp['symbol'],
+    interval=dictionary_resp['interval'],
+    theme=dictionary_resp['theme'],
+    studies=dictionary_resp['studies'],  # Add Moving Average, RSI, and Bollinger Bands
+    chart_style=dictionary_resp['style'],         # Candlestick chart style
+    output_file="chart_img.png",
+    range=dictionary_resp['range']
+)
+    final_url = upload_to_catbox('chart_img.png')
+    return final_url
+
+chart_img_tool = Tool(
+    name="chart_img_tool",
+    func=generate_chart_img,
+    description="""
+    Generate a trading chart image with the CHART-IMG API based on user specifications and uploads it to Catbox.
+
+    Args:
+        request (str): A user-friendly description of the chart, including the symbol, interval, theme, style, 
+                       and any technical indicators or other preferences.
+
+    Returns:
+        str: URL of the generated and uploaded chart image.
+    """
+)
+
+
+
+
+
+
 
 # Initialize the LangChain agent
 llm = ChatOpenAI(
@@ -394,7 +560,7 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 
 # Example tools (e.g., plotting and web browsing)
 
-all_tools = [plotting_tool, web_browse_tool,financial_data_tool]
+all_tools = [plotting_tool, web_browse_tool,financial_data_tool,chart_img_tool]
 
 agent = initialize_agent(
     tools=all_tools,
