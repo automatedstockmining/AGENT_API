@@ -472,6 +472,7 @@ def fetch_and_upload_chart(symbol, interval, range, theme, studies, chart_style)
         if response.status_code == 200:
             # Upload the chart image directly from the binary response content
             catbox_url = upload_to_catbox_binary(response.content)
+
             return catbox_url
         else:
             return f"Error: Failed to fetch chart. Status code: {response.status_code}"
