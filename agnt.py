@@ -576,7 +576,7 @@ memory = ConversationBufferMemory(memory_key="chat_history", return_messages=Tru
 
 # Example tools (e.g., plotting and web browsing)
 
-all_tools = [plotting_tool, web_browse_tool,financial_data_tool]
+all_tools = [plotting_tool, web_browse_tool,financial_data_tool,chart_img_tool]
 
 agent = initialize_agent(
     tools=all_tools,
