@@ -343,7 +343,7 @@ def fetch_financial_data(req: str) -> str:
                        f'keep in mind that the current date is {today} when you make a request involving the current date'
                        f'return the financial modelling prep endpoint that will give the data needed to answer the question. '
                        f'RETURN SIMPLY THE FULL ENDPOINT AND NOTHING ELSE, WITH NO """ OR COMMAS AROUND IT. '
-                       f'whenever the user asks for the current anything make 100% sure that you include the current date in the request: {datetime.today().strftime('%Y-%m-%d')} '
+                       f'whenever the user asks for the current anything make 100% sure that you include the current date in the request: {today} '
         }]
     )
     url = message.choices[0].message.content.strip()
