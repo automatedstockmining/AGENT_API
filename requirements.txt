@@ -27,3 +27,4 @@ trafilatura
 gradio
 googlesearch-python
 huggingface-hub
+chromadb
