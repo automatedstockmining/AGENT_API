@@ -544,7 +544,7 @@ def generate_chart_img(request: str) -> str:
         studies=dictionary_resp['studies'],
         chart_style=dictionary_resp['style']
     )
-    return f'<Image url="{catbox_urlurl}" />'
+    return f'<Image url="{catbox_url}" />'
 
 
 
