@@ -333,13 +333,13 @@ def fetch_financial_data(req: str) -> str:
     print(search_content)
     # Generate the API endpoint using GPT
     from datetime import datetime
-
+    today = datetime.today().strftime('%Y-%m-%d')
     message = client.chat.completions.create(
         model='gpt-4o-mini',
         temperature=0,
         messages=[{
             'role': 'user',
-            'content': f'based off of {req} and this data: {search_content} and the fact that the current date is {datetime.today().strftime('%Y-%m-%d')} '
+            'content': f'based off of {req} and this data: {search_content} and the fact that the current date is {today} '
                        f'keep in mind that the current date is {datetime.today().strftime('%Y-%m-%d')} when you make a request involving the current date'
                        f'return the financial modelling prep endpoint that will give the data needed to answer the question. '
                        f'RETURN SIMPLY THE FULL ENDPOINT AND NOTHING ELSE, WITH NO """ OR COMMAS AROUND IT. '
