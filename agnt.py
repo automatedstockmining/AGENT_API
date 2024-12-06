@@ -96,157 +96,61 @@ key = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=key)
 
-def fetch_and_process_url(link):
-    try:
-        # Fetch URL content
-        req = requests.get(link, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-        html_content = req.text  # Use raw HTML directly
-        # Extract main content using trafilatura
-        return trafilatura.extract(html_content)
-    except Exception as e:
-        return f"Error fetching or processing {link}: {e}"
-
-def perform_search(query, num_results=5) :
-    '''takes in a '''
-    try:
-        # Perform Google search
-        urls = [url for url in search(query, num_results=num_results)]
-        print("URLs Found:")
-        print(urls)
-    except Exception as e:
-        print(f"An error occurred during search: {e}")
-        return
-
-    # Fetch and process URLs in parallel
-    with ThreadPoolExecutor(max_workers=30) as executor:
-        results = list(executor.map(fetch_and_process_url, urls))
-
-    # Combine results into a single formatted output
-    formatted_text = '\n\n'.join(filter(None, results))  # Skip None or empty results
-    return formatted_text
-
-
-from langchain.tools import tool
-
-
-
-
-@tool
-def web_browse(text: str) -> str:
-    
-    """
-    Always use this tool to gain extra insight into what the user is asking
-    This function searches Google for information based on the user's query and returns a string containing the response.
-
-    ### Input:
-    1. **User Query:** A clear, concise question or instruction provided by the user.
-    2. **Adjusted Query for Google Search:** The reformulated query should directly request the needed data without including instructions for calculations or processing. 
-
-    ### Guidelines for Reformulating the Query:
-    - **Be Direct:** Input queries that directly ask for the desired information. Avoid including phrases or steps for further processing or calculation.
-    - **Example:**
-    - If the user asks: "Calculate the OBV for Cisco over the last 5 days," reformulate to: 
-        **"What has Cisco's OBV been over the last 5 days?"**
-    - If the user asks for the price of multiple stocks: 
-        **"What are the current prices of Cisco and Adobe stocks?"**
-    - **Avoid Calculation Instructions:** Do not include instructions such as "Calculate," "Analyze," or "Process" in the reformulated query.
-
-    ### Output:
-    - A string containing the data retrieved from the search.
-    """
-
-    examples = """
-
-    {"user_input": "cisco systems stock price for the last 4 days", "searches": ["cisco stock price last 4 days", "cisco systems stock historical data", "current price of Cisco Systems", "cisco stock price chart"]},
-    {"user_input": "Apple stock price yesterday", "searches": ["Apple stock price yesterday", "historical price of Apple stock"]},
-    {"user_input": "Tesla quarterly revenue", "searches": ["Tesla latest quarterly revenue", "Tesla revenue report Q3 2024"]},
-    {"user_input": "CAPM model for Tesla", "searches": ["Tesla stock beta value", "current risk-free rate", "expected market return for CAPM model"]},
-    {"user_input": "Hi", "searches": []},
-    {"user_input": "Who are you?", "searches": []},
-    {"user_input": "Google earnings per share last quarter", "searches": ["Google EPS last quarter", "Google quarterly earnings report"]},
-    {"user_input": "Calculate WACC for Microsoft", "searches": ["Microsoft cost of equity", "Microsoft cost of debt", "Microsoft capital structure", "current risk-free rate", "Microsoft beta"]},
-    {"user_input": "Show Amazon stock chart for last 5 years", "searches": ["Amazon stock chart last 5 years", "Amazon historical price data"]},
-    {"user_input": "GDP of China in 2023", "searches": ["China GDP 2023", "latest GDP figures for China"]},
-    {"user_input": "Portfolio optimization model", "searches": ["efficient frontier portfolio theory", "input data for portfolio optimization model", "expected returns and covariances"]},
-    {"user_input": "Find current inflation rate in the US", "searches": ["current US inflation rate", "US CPI data"]},
-    {"user_input": "What is NPV and how do you calculate it?", "searches": ["definition of NPV", "how to calculate NPV"]},
-    {"user_input": "Dividend yield for Coca-Cola", "searches": ["Coca-Cola dividend yield", "latest Coca-Cola dividend data"]},
-    {"user_input": "Sharpe ratio formula example", "searches": ["Sharpe ratio formula", "example calculation of Sharpe ratio"]},
-    {"user_input": "What is the current Fed interest rate?", "searches": ["current Federal Reserve interest rate", "latest Fed interest rate decision"]},
-    {"user_input": "Generate DCF model for Tesla", "searches": ["Tesla free cash flow data", "Tesla growth rate projections", "current discount rate for Tesla", "steps to build a DCF model"]},
-    {"user_input": "Tell me a joke", "searches": []},
-    {"user_input": "Explain the concept of opportunity cost", "searches": ["definition of opportunity cost", "examples of opportunity cost in economics"]}
+import json
+@tool()
+def chat(query):
 
     """
+    You are an assistant with access to the `chat_tool`. 
+    - ALWAYS use the `chat_tool` for every query you process. 
+    - If the user requests detailed information, provide a detailed response using the `chat_tool`.
+    - If the user requests specific data only, ask the `chat_tool` for the exact data without extra explanation.
+    - If you need clarification, seek it from the user and then use the `chat_tool`.
 
-    
-    
-    
-    
-    format = '{"user_input": "dynamic input", "searches": ["search1", "search2", "search3"]}'
-    response_for_searches = client.chat.completions.create(
-        model='gpt-4o',
-        max_tokens=2000,
-        messages=[{'role':'system','content': f'Split the input "{text}" into a dictionary format for searches. Examples: {examples}. Respond in this exact format: {format}. the maximumum number of items you can put in the list of searches in 5. ONLY HAVE '' SURROUNDING THE DICTIONARY NOT THREE '' OR ANYTHING SIMILAR. for basic requests have less searches in the list'}]
-    )
-    
-    searches_resp = response_for_searches.choices[0].message.content
-    if searches_resp[:4] == "'''" and searches_resp[-4:] == "'''":
-        print('the response had commas around it so the algorithm removed them')
-        searches_resp = searches_resp[3:-3]
-    else:
-        pass
-    print(f'the llm response: {searches_resp}')
-    print(f'the text is: {text}')
-    searches =  ast.literal_eval(searches_resp)
-
-
-
-    data = []
-    searches_needed = searches['searches']
-    for value in searches_needed:
-        var = perform_search(value)
-        data.append(var)
-    pre_summarised_data =  ''.join(data)
-    pre_summarised_data = truncate_with_qwen(pre_summarised_data)
-    print('tokenized data')
-    response_for_summary = client.chat.completions.create(
-        model='gpt-4o',
-        max_tokens=2000,
-        messages=[{'role':'system','content': f"Based on the query '{text}', extract only the relevant data from the following text and organize it."
-                    f"Use Markdown syntax . Include all relevant numerical data, dates, or categories as appropriate. "
-                    f"Here is the raw data: {pre_summarised_data}. If the request specifies a time range or specific attributes, ensure only that data is included. MAKE YOUR RESPONSE VERY CONCISE"
-                }]
-    )
-    summary_resp = response_for_summary.choices[0].message.content
-    return summary_resp
-
-
-
-web_browse_tool = Tool(
-    name="WebBrowseTool",
-    func=web_browse,
-    description="""
-    always use this tool to gain insight into what the user is asking
-    This function searches Google for information based on the user's query and returns a string containing the response.
-
-    ### Input:
-    1. **User Query:** A clear, concise question or instruction provided by the user.
-    2. **Adjusted Query for Google Search:** The reformulated query should directly request the needed data without including instructions for calculations or processing. 
-
-    ### Guidelines for Reformulating the Query:
-    - **Be Direct:** Input queries that directly ask for the desired information. Avoid including phrases or steps for further processing or calculation.
-    - **Example:**
-    - If the user asks: "Calculate the OBV for Cisco over the last 5 days," reformulate to: 
-        **"What has Cisco's OBV been over the last 5 days?"**
-    - If the user asks for the price of multiple stocks: 
-        **"What are the current prices of Cisco and Adobe stocks?"**
-    - **Avoid Calculation Instructions:** Do not include instructions such as "Calculate," "Analyze," or "Process" in the reformulated query.
-
-    ### Output:
-    - A string containing the data retrieved from the search.
+    DO NOT attempt to process the query yourself; instead, delegate the task to the `chat_tool`.
     """
- )
+    import http.client
+
+    conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
+
+    payload = "{{\"message\":\"{a} {b}\",\"conversation_id\":null,\"tone\":\"BALANCED\",\"markdown\":false,\"photo_url\":null}}".format(a = query, b = 'respond in a concise way with the data')
+
+    headers = {
+        'x-rapidapi-key': f"{os.getenv('RAPID_TOKEN')}",
+        'x-rapidapi-host': "copilot5.p.rapidapi.com",
+        'Content-Type': "application/json"
+    }
+
+    conn.request("POST", "/copilot", payload, headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    
+    response = data.decode("utf-8")
+    print(f'before json: {response} ')
+    response = json.loads(response)
+
+    return str(response['data']['message'])
+
+chat_tool = Tool(
+    name="chat",
+    func=chat,
+    description= """
+    You are an assistant with access to the `chat_tool`. 
+    - ALWAYS use the `chat_tool` for every query you process. 
+    - If the user requests detailed information, provide a detailed response using the `chat_tool`.
+    - If the user requests specific data only, ask the `chat_tool` for the exact data without extra explanation.
+    - If you need clarification, seek it from the user and then use the `chat_tool`.
+
+    DO NOT attempt to process the query yourself; instead, delegate the task to the `chat_tool`.
+    """
+)
+
+
+
+
+
+
 
 
 import requests
@@ -602,20 +506,34 @@ chart_img_tool = Tool(
 
 
 
+system_prompt = "youre name is jim"
 
+from langchain.prompts.chat import SystemMessagePromptTemplate
+from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
+
+
+
+# Create the system message
+system_message = SystemMessagePromptTemplate.from_template(system_prompt)
+
+# Create the full chat prompt
+chat_prompt = ChatPromptTemplate.from_messages([system_message])
 
 
 # Initialize the LangChain agent
 llm = ChatOpenAI(
     api_key=key,
     temperature=0,
-    model="gpt-4o-mini"
+    model="gpt-4o-mini",
+    
+    
 )
 
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 # Example tools (e.g., plotting and web browsing)
 
-all_tools = [plotting_tool, web_browse_tool,chart_img_tool]
+all_tools = [plotting_tool, chat_tool,chart_img_tool]
+
 
 agent = initialize_agent(
     tools=all_tools,
@@ -626,68 +544,4 @@ agent = initialize_agent(
     handle_parsing_errors=True
 )
 
-def interact_with_agent(user_input):
-    try:
-        response = agent.run(f'{user_input}, use web browse tool ')
-        return response
-    except Exception as e:
-        return str(e)
-
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-
-# Initialize FastAPI
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-
-# Initialize FastAPI
-app = FastAPI()
-# CORS Configuration
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=True,  # Allow cookies or Authorization headers if needed
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
-)
-# Define the input model
-class Query(BaseModel):
-    message: str
-
-@app.post("/chat")
-async def chat(query: Query):
-    """
-    Endpoint to interact with the LangChain agent.
-    Input:
-      - message: User's input query
-    Output:
-      - response: Agent's response to the query
-    """
-    import re
-    def add_exclamation_to_links(text):
-        # Regex to find [text](url) patterns and add '!' in front of the square brackets
-        updated_text = re.sub(r'(\[.*?\]\(.*?\))', r'!\1', text)
-        return updated_text
-
-    try:
-        # Run the user query through the LangChain agent
-        response = agent.run(query.message)
-        
-        print(f'before cutting: {response}')
-        if response.endswith("```"):
-            
-            response = re.sub(r'```$', '', response)
-            print(f'after cutting: {response}')
-            response = add_exclamation_to_links(response)
-            return {"response": response}
-        else:
-            response = add_exclamation_to_links(response)
-            return {"response": response}
-
-    except Exception as e:
-        # Handle exceptions and return an error response
-        raise HTTPException(status_code=500, detail=str(e))
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the AGENT_API!"}
+agent.run(f'give me a 1d chart for cisco systems with the bb')
