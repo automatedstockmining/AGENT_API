@@ -628,14 +628,24 @@ async def chat(query: Query):
     Output:
       - response: Agent's response to the query
     """
+    import re
+    def add_exclamation_to_links(text):
+        # Regex to find [text](url) patterns and add '!' in front of the square brackets
+        updated_text = re.sub(r'(\[.*?\]\(.*?\))', r'!\1', text)
+        return updated_text
+
     try:
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
+        
         print(f'before cutting: {response}')
         if response.endswith("```"):
             print(f'after cutting: {response}')
+            response = response[:-3]
+            response = add_exclamation_to_links(response)
             return {"response": response[:-3]}
         else:
+            response = add_exclamation_to_links(response)
             return {"response": response}
 
     except Exception as e:
