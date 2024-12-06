@@ -632,7 +632,7 @@ async def chat(query: Query):
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
         print(f'before cutting: {response}')
-        if response.endswith("'''"):
+        if response == "'''":
             print(f'after cutting: {response}')
             return {"response": response[:-3]}
         else:
