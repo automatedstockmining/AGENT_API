@@ -577,7 +577,6 @@ llm = ChatOpenAI(
 )
 
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-
 # Example tools (e.g., plotting and web browsing)
 
 all_tools = [plotting_tool, web_browse_tool,financial_data_tool,chart_img_tool]
@@ -632,7 +631,10 @@ async def chat(query: Query):
     try:
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
-        return {"response": response}
+        if response[:-3] == "'''":
+            return {"response": response[:-3]}
+        else:
+            return {"response": response}
     except Exception as e:
         # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
