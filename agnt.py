@@ -161,6 +161,10 @@ from openai import OpenAI
 def generate_and_upload_plot(request, output_file="plot.png", openai_api_key=key):
     
     """
+        Purpose:
+    - Generates custom plots using Python's Matplotlib library.
+    - Suitable for requests involving general-purpose data visualization, such as line plots, bar charts, histograms, or scatter plots.
+
     YOU MUST INPUT THE DATA FROM THE SEARCH TOOL INTO THIS TOOL FOR IT TO WORK. 
     THIS TOOL DOES NOT HAVE PRE-LOADED DATA AND REQUIRES IT FROM THE USER. 
     ALWAYS ENSURE THE DATA IS PASSED INTO THE REQUEST AND CLEARLY DESCRIBE THE PLOT NEEDED.
