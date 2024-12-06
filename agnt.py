@@ -544,3 +544,68 @@ agent = initialize_agent(
     handle_parsing_errors=True
 )
 
+def interact_with_agent(user_input):
+    try:
+        response = agent.run(f'{user_input}, remember to use web browse tool ')
+        return response
+    except Exception as e:
+        return str(e)
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+# Initialize FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+# Initialize FastAPI
+app = FastAPI()
+# CORS Configuration
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,  # Allow cookies or Authorization headers if needed
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
+# Define the input model
+class Query(BaseModel):
+    message: str
+
+@app.post("/chat")
+async def chat(query: Query):
+    """
+    Endpoint to interact with the LangChain agent.
+    Input:
+      - message: User's input query
+    Output:
+      - response: Agent's response to the query
+    """
+    import re
+    def add_exclamation_to_links(text):
+        # Regex to find [text](url) patterns and add '!' in front of the square brackets
+        updated_text = re.sub(r'(\[.*?\]\(.*?\))', r'!\1', text)
+        return updated_text
+
+    try:
+        # Run the user query through the LangChain agent
+        response = agent.run(query.message)
+        
+        print(f'before cutting: {response}')
+        if response.endswith("```"):
+            
+            response = re.sub(r'```$', '', response)
+            print(f'after cutting: {response}')
+            response = add_exclamation_to_links(response)
+            return {"response": response}
+        else:
+            response = add_exclamation_to_links(response)
+            return {"response": response}
+
+    except Exception as e:
+        # Handle exceptions and return an error response
+        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the AGENT_API!"}
