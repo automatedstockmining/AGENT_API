@@ -628,7 +628,7 @@ agent = initialize_agent(
 
 def interact_with_agent(user_input):
     try:
-        response = agent.run(f'{user_input}, remember to use web browse tool ')
+        response = agent.run(f'{user_input}, use web browse tool ')
         return response
     except Exception as e:
         return str(e)
