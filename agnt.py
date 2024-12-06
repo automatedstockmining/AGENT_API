@@ -135,6 +135,7 @@ from langchain.tools import tool
 def web_browse(text: str) -> str:
     
     """
+    Always use this tool to gain extra insight into what the user is asking
     This function searches Google for information based on the user's query and returns a string containing the response.
 
     ### Input:
@@ -226,6 +227,7 @@ web_browse_tool = Tool(
     name="WebBrowseTool",
     func=web_browse,
     description="""
+    always use this tool to gain insight into what the user is asking
     This function searches Google for information based on the user's query and returns a string containing the response.
 
     ### Input:
