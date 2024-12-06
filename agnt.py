@@ -631,10 +631,11 @@ async def chat(query: Query):
     try:
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
-        if response[:-3] == "'''":
+        if response.endswith("'''"):
             return {"response": response[:-3]}
         else:
             return {"response": response}
+
     except Exception as e:
         # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
