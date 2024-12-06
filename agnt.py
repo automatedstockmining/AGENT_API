@@ -641,7 +641,7 @@ async def chat(query: Query):
         print(f'before cutting: {response}')
         if response.endswith("```"):
             print(f'after cutting: {response}')
-            response = response[:-3]
+            response = response = re.sub(r'```$', '', response)
             response = add_exclamation_to_links(response)
             return {"response": response[:-3]}
         else:
