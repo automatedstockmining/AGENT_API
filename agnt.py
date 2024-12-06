@@ -134,10 +134,26 @@ from langchain.tools import tool
 @tool
 def web_browse(text: str) -> str:
     
-    '''
-    searches google for what the user is asking for and returns a string of data to respond with. input the user query
-    '''
-    
+    """
+    This function searches Google for information based on the user's query and returns a string containing the response.
+
+    ### Input:
+    1. **User Query:** A clear, concise question or instruction provided by the user.
+    2. **Adjusted Query for Google Search:** The reformulated query should directly request the needed data without including instructions for calculations or processing. 
+
+    ### Guidelines for Reformulating the Query:
+    - **Be Direct:** Input queries that directly ask for the desired information. Avoid including phrases or steps for further processing or calculation.
+    - **Example:**
+    - If the user asks: "Calculate the OBV for Cisco over the last 5 days," reformulate to: 
+        **"What has Cisco's OBV been over the last 5 days?"**
+    - If the user asks for the price of multiple stocks: 
+        **"What are the current prices of Cisco and Adobe stocks?"**
+    - **Avoid Calculation Instructions:** Do not include instructions such as "Calculate," "Analyze," or "Process" in the reformulated query.
+
+    ### Output:
+    - A string containing the data retrieved from the search.
+    """
+
     examples = """
 
     {"user_input": "cisco systems stock price for the last 4 days", "searches": ["cisco stock price last 4 days", "cisco systems stock historical data", "current price of Cisco Systems", "cisco stock price chart"]},
@@ -196,9 +212,9 @@ def web_browse(text: str) -> str:
     response_for_summary = client.chat.completions.create(
         model='gpt-4o',
         max_tokens=2000,
-        messages=[{'role':'system','content': f"Based on the query '{text}', extract only the relevant data from the following text and organize it into a table format. "
-                    f"Use Markdown table syntax with clear column headers. Include all relevant numerical data, dates, or categories as appropriate. "
-                    f"Here is the raw data: {pre_summarised_data}. If the request specifies a time range or specific attributes, ensure only that data is included."
+        messages=[{'role':'system','content': f"Based on the query '{text}', extract only the relevant data from the following text and organize it."
+                    f"Use Markdown syntax . Include all relevant numerical data, dates, or categories as appropriate. "
+                    f"Here is the raw data: {pre_summarised_data}. If the request specifies a time range or specific attributes, ensure only that data is included. MAKE YOUR RESPONSE VERY CONCISE"
                 }]
     )
     summary_resp = response_for_summary.choices[0].message.content
@@ -209,8 +225,26 @@ def web_browse(text: str) -> str:
 web_browse_tool = Tool(
     name="WebBrowseTool",
     func=web_browse,
-    description='''searches google for what the user is asking for and returns a string of data to respond with'''
-    )
+    description="""
+    This function searches Google for information based on the user's query and returns a string containing the response.
+
+    ### Input:
+    1. **User Query:** A clear, concise question or instruction provided by the user.
+    2. **Adjusted Query for Google Search:** The reformulated query should directly request the needed data without including instructions for calculations or processing. 
+
+    ### Guidelines for Reformulating the Query:
+    - **Be Direct:** Input queries that directly ask for the desired information. Avoid including phrases or steps for further processing or calculation.
+    - **Example:**
+    - If the user asks: "Calculate the OBV for Cisco over the last 5 days," reformulate to: 
+        **"What has Cisco's OBV been over the last 5 days?"**
+    - If the user asks for the price of multiple stocks: 
+        **"What are the current prices of Cisco and Adobe stocks?"**
+    - **Avoid Calculation Instructions:** Do not include instructions such as "Calculate," "Analyze," or "Process" in the reformulated query.
+
+    ### Output:
+    - A string containing the data retrieved from the search.
+    """
+ )
 
 
 import requests
@@ -586,7 +620,7 @@ agent = initialize_agent(
     llm=llm,
     agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
     memory=memory,
-    
+    verbose = True,
     handle_parsing_errors=True
 )
 
