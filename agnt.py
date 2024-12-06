@@ -95,7 +95,7 @@ load_dotenv()
 key = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=key)
-
+rapid_token = os.getenv('RAPID_TOKEN')
 import json
 @tool()
 def chat(query):
@@ -116,7 +116,7 @@ def chat(query):
     payload = "{{\"message\":\"{a} {b}\",\"conversation_id\":null,\"tone\":\"BALANCED\",\"markdown\":false,\"photo_url\":null}}".format(a = query, b = 'respond in a concise way with the data')
 
     headers = {
-        'x-rapidapi-key': f"{os.getenv('RAPID_TOKEN')}",
+        'x-rapidapi-key': f'{rapid_token}',
         'x-rapidapi-host': "copilot5.p.rapidapi.com",
         'Content-Type': "application/json"
     }
