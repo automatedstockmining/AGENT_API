@@ -544,4 +544,3 @@ agent = initialize_agent(
     handle_parsing_errors=True
 )
 
-agent.run(f'give me a 1d chart for cisco systems with the bb')
