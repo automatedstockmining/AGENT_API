@@ -221,6 +221,9 @@ plotting_tool = Tool(
     name="plotting_tool",
     func=generate_and_upload_plot,
     description="""
+     - Generates custom plots using Python's Matplotlib library.
+    - Suitable for requests involving general-purpose data visualization, such as line plots, bar charts, histograms, or scatter plots.
+
     IN YOUR RESPONSE TAKE THE LINK RETURNED AND PASS IT TO THE USER UNDER 'HERE' REPLACE IT WITH THE LINK
     YOU MUST INPUT THE DATA FROM THE SEARCH TOOL INTO THIS TOOL FOR IT TO WORK. 
     THIS TOOL DOES NOT HAVE PRE-LOADED DATA AND REQUIRES IT FROM THE USER. 
@@ -426,6 +429,8 @@ def fetch_and_upload_chart(symbol, interval, range, theme, studies, chart_style)
 # Example usage
 def generate_chart_img(request: str) -> str:
     """
+
+    SPECIFICALLY FOR FINANCIAL CHARTS, USE PLOTTING TOOL FOR GENERAL PLOTS!
     Generate a chart image based on the user's request and upload it to Catbox.
 
     This function integrates with the CHART-IMG API to create trading charts and
@@ -496,6 +501,7 @@ chart_img_tool = Tool(
     name="chart_img_tool",
     func=generate_chart_img,
     description="""
+    SPECIFICALLY FOR FINANCIAL CHARTS, USE PLOTTING TOOL FOR GENERAL PLOTS!
     Generate a trading chart image with the CHART-IMG API based on user specifications and uploads it to Catbox.
 
     Args:
