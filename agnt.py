@@ -471,7 +471,7 @@ def generate_chart_img(request: str) -> str:
             - interval (str): The chart interval (e.g., "1D", "1H").
             - theme (str): Chart theme ("dark" or "light").
             - studies (list): List of technical indicators (e.g., ["MA", "RSI", "BB"]).
-            - style (str): Chart style ("candle", "line", etc.).
+            - style (str): Chart style (bar, candle, line, area, heikinAshi, hollowCandle, baseline, hiLo, column).
             - width (int): Image width in pixels (minimum 320).
             - height (int): Image height in pixels (minimum 220).
             - format (str): Image format ("png" or "jpeg").
@@ -516,18 +516,6 @@ chart_img_tool = Tool(
 
 
 
-system_prompt = "youre name is jim"
-
-from langchain.prompts.chat import SystemMessagePromptTemplate
-from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
-
-
-
-# Create the system message
-system_message = SystemMessagePromptTemplate.from_template(system_prompt)
-
-# Create the full chat prompt
-chat_prompt = ChatPromptTemplate.from_messages([system_message])
 
 
 # Initialize the LangChain agent
