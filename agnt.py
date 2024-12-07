@@ -101,7 +101,8 @@ import json
 def chat(query):
 
     """
-    You are an assistant with access to the `chat_tool`. 
+    USE THIS FOR EVERY QUERY, IT HAS ACCESS TO DATA AND PROVIDES AN ACCURATE RESPONSE
+    
     - ALWAYS use the `chat_tool` for every query you process. 
     - If the user requests detailed information, provide a detailed response using the `chat_tool`.
     - If the user requests specific data only, ask the `chat_tool` for the exact data without extra explanation.
@@ -136,7 +137,7 @@ chat_tool = Tool(
     name="chat",
     func=chat,
     description= """
-    You are an assistant with access to the `chat_tool`. 
+    USE THIS FOR EVERY QUERY, IT HAS ACCESS TO DATA AND PROVIDES AN ACCURATE RESPONSE
     - ALWAYS use the `chat_tool` for every query you process. 
     - If the user requests detailed information, provide a detailed response using the `chat_tool`.
     - If the user requests specific data only, ask the `chat_tool` for the exact data without extra explanation.
