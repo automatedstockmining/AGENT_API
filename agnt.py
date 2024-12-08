@@ -469,14 +469,14 @@ def generate_chart_img(request: str) -> str:
             - - enclose each item in the dictionary in " not '
             - do not inlude """python json or anything similar as it will ruin the function. simply return the dictionary with nothing around it no commas etc
             - symbol (str): The TradingView symbol (e.g., "BINANCE:BTCUSDT").
-            - interval (str): The chart interval (e.g., "1D", "1H").
+            - interval (str): The chart interval the distance between data points choose from: [1m, 3m, 5m, 15m, 30m, 45m, 1h, 2h, 3h, 4h, 6h, 12h, 1D, 1W, 1M, 3M, 6M, 1Y].
             - theme (str): Chart theme ("dark" or "light").
             - studies (list): List of technical indicators (e.g., ["MA", "RSI", "BB"]).
             - style (str): Chart style (bar, candle, line, area, heikinAshi, hollowCandle, baseline, hiLo, column).
             - width (int): Image width in pixels (minimum 320).
             - height (int): Image height in pixels (minimum 220).
             - format (str): Image format ("png" or "jpeg").
-            - range (str): Chart range (e.g., "1M", "6M").
+            - range (str): Chart range, the overall period on the chart, choose from:  1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD, MTD, YTD.
             Return only the raw Python dictionary, without explanation or additional text. DO NOT RETURN ''PYTHON OR SIMILAR JUST THE RAW DICTIONARY
             '''
         }]
