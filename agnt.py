@@ -31,8 +31,56 @@ from langchain_core.tools import Tool
 from langchain.chat_models import ChatOpenAI
 from langchain.agents import initialize_agent, AgentType
 from langchain.memory import ConversationBufferMemory
-
+import http.client
 from langchain.tools import tool
+
+
+
+@tool
+def chart_analyse(url_description: str) -> str:
+    """
+    Analyse a chart image and provide detailed insights.
+
+    This tool sends a chart image and a description to a remote analysis API 
+    and retrieves a detailed response about the chart's content.
+
+    Args:
+        url (str): The URL of the chart image to analyze.
+        description (str): A brief description or context for the chart to guide the analysis.
+
+    Returns:
+        str: The API's response containing the analysis of the chart.
+    """
+    split_on_comma = url_description
+    print(f'the concatenated string: {split_on_comma}')
+    split_sentance = split_on_comma.split(',')
+    print(f'the re-split sentance {split_sentance}')
+    image_url = split_sentance[0]
+    print(f'the image url: {image_url}')
+    description = " ".join(split_sentance[1:])
+    print(f'the description: {description}')
+    conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
+    key = os.getenv('RAPID_TOKEN')  # Ensure this environment variable is set
+    payload = '{{"message":"{}","conversation_id":null,"tone":"BALANCED","markdown":false,"photo_url":"{}"}}'.format(description, image_url)
+
+    headers = {
+        'x-rapidapi-key': key,
+        'x-rapidapi-host': "copilot5.p.rapidapi.com",
+        'Content-Type': "application/json"
+    }
+
+    conn.request("POST", "/copilot", payload, headers)
+    res = conn.getresponse()
+    data = res.read()
+    return data.decode("utf-8")
+chart_analyse_tool = Tool(
+    name="Chart Analyse Tool",
+    func=chart_analyse,
+    description=(
+        "This tool takes a chart image URL and a description/context as input. "
+        "It analyzes the chart and returns detailed insights based on the provided data."
+    )
+)
 
 def truncate_with_qwen(text: str, max_tokens: int = 10000) -> str:
     """
