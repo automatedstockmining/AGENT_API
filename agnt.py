@@ -524,8 +524,8 @@ def generate_chart_img(request: str) -> str:
             - width (int): Image width in pixels (minimum 320).
             - height (int): Image height in pixels (minimum 220).
             - format (str): Image format ("png" or "jpeg").
-            - range (str): Chart range, the overall period on the chart, choose from:  1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD, MTD, YTD.
-            Return only the raw Python dictionary, without explanation or additional text. DO NOT RETURN ''PYTHON OR SIMILAR JUST THE RAW DICTIONARY
+            - range (str): Chart range, the overall period on the chart, choose from:  1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD, MTD, YTD. 
+            Return only the raw Python dictionary, without explanation or additional text. DO NOT RETURN ''PYTHON OR SIMILAR JUST THE RAW DICTIONARY. THE CHART RANGE IS THE TIMEFRAME WHICH THE USER ASKED FOR, SO IF THEY ASK FOR A 1 DAY CHART IT SHOULD BE A 1D RANGE
             '''
         }]
     )
