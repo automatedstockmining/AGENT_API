@@ -39,6 +39,7 @@ from langchain.tools import tool
 @tool
 def chart_analyse(url_description: str) -> str:
     """
+    SEPERATE THE IMAGE URL AND THE DESCRIPTION WITH A COMMA. PASS THEM IN AS NORMAL STRINGS NOT DICTIONARIES 
     Analyse a chart image and provide detailed insights.
 
     This tool sends a chart image and a description to a remote analysis API 
@@ -77,7 +78,7 @@ chart_analyse_tool = Tool(
     name="Chart Analyse Tool",
     func=chart_analyse,
     description=(
-        "This tool takes a chart image URL and a description/context as input. "
+        "This tool takes a chart image URL and a description/context as input. SEPERATE THE IMAGE URL AND THE DESCRIPTION WITH A COMMA. PASS THEM IN AS NORMAL STRINGS NOT DICTIONARIES "
         "It analyzes the chart and returns detailed insights based on the provided data."
     )
 )
