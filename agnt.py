@@ -579,7 +579,7 @@ llm = ChatOpenAI(
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 # Example tools (e.g., plotting and web browsing)
 
-all_tools = [plotting_tool, chat_tool,chart_img_tool]
+all_tools = [plotting_tool, chat_tool,chart_img_tool,chart_analyse_tool]
 
 
 agent = initialize_agent(
