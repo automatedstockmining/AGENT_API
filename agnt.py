@@ -476,11 +476,8 @@ def fetch_and_upload_chart(symbol, interval, range, theme, studies, chart_style)
     except Exception as e:
         return f"Error: {e}"
 
-# Example usage
 def generate_chart_img(request: str) -> str:
     """
-
-    SPECIFICALLY FOR FINANCIAL CHARTS, USE PLOTTING TOOL FOR GENERAL PLOTS!
     Generate a chart image based on the user's request and upload it to Catbox.
 
     This function integrates with the CHART-IMG API to create trading charts and
@@ -504,66 +501,222 @@ def generate_chart_img(request: str) -> str:
         - Directly uploads the chart image to Catbox without saving it locally.
         - Returns the final Catbox-hosted URL for user consumption.
 
-    Use Case in LangChain:
-        - Add this function to a custom tool for generating and visualizing financial charts.
-        - The agent should route user requests related to chart generation to this tool.
-    """
-    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-    response = client.chat.completions.create(
-        model='gpt-4o',
-        messages=[{
-            'role': 'user',
-            'content': f'''based off of {request} Generate a Python dictionary with parameters for the CHART-IMG API based on the user's request.
-            Include the following keys:
-            - - enclose each item in the dictionary in " not '
-            - do not inlude """python json or anything similar as it will ruin the function. simply return the dictionary with nothing around it no commas etc
-            - symbol (str): The TradingView symbol (e.g., "BINANCE:BTCUSDT").
-            - interval (str): The chart interval the distance between data points choose from: [1m, 3m, 5m, 15m, 30m, 45m, 1h, 2h, 3h, 4h, 6h, 12h, 1D, 1W, 1M, 3M, 6M, 1Y].
-            - theme (str): Chart theme ("dark" or "light").
-            - studies (list): List of technical indicators (e.g., ["MA", "RSI", "BB"]).
-            - style (str): Chart style (bar, candle, line, area, heikinAshi, hollowCandle, baseline, hiLo, column).
-            - width (int): Image width in pixels (minimum 320).
-            - height (int): Image height in pixels (minimum 220).
-            - format (str): Image format ("png" or "jpeg").
-            - range (str): Chart range, the overall period on the chart, choose from:  1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD, MTD, YTD. 
-            Return only the raw Python dictionary, without explanation or additional text. DO NOT RETURN ''PYTHON OR SIMILAR JUST THE RAW DICTIONARY. THE CHART RANGE IS THE TIMEFRAME WHICH THE USER ASKED FOR, SO IF THEY ASK FOR A 1 DAY CHART IT SHOULD BE A 1D RANGE
-            '''
-        }]
+      """
+    from black import format_str, FileMode
+import autopep8
+
+with open('formatted-indicators-json.txt','r') as file:
+    read = file.read()
+my_json = ast.literal_eval(read)
+
+save_code = """
+# Upload binary content to Catbox
+url = "https://catbox.moe/user/api.php"
+payload = {"reqtype": "fileupload"}
+files = {"fileToUpload": ("chart_image.png", response.content)}
+
+# Send POST request to upload the image
+upload_response = requests.post(url, data=payload, files=files)
+
+# Check the response
+if upload_response.status_code == 200:
+    print(f"{upload_response.text.strip()}")
+    
+else:
+    print(f"Failed to upload to Catbox: {upload_response.status_code} - {upload_response.text}")
+"""
+
+def find_indicator(data, name):
+    for item in data:
+        if item.get("indicator name") == name:
+            return item['description']
+    return None  # Return None if the indicator is not found
+
+
+technical_indicators = [
+    "Accumulation/Distribution",
+    "Accumulative Swing Index",
+    "Advance/Decline",
+    "Arnaud Legoux Moving Average",
+    "Aroon",
+    "Average Directional Index",
+    "Average True Range",
+    "Awesome Oscillator",
+    "Balance of Power",
+    "Bollinger Bands",
+    "Bollinger Bands %B",
+    "Bollinger Bands Width",
+    "Chaikin Money Flow",
+    "Chaikin Oscillator",
+    "Chaikin Volatility",
+    "Chande Kroll Stop",
+    "Chande Momentum Oscillator",
+    "Chop Zone",
+    "Choppiness Index",
+    "Commodity Channel Index",
+    "Connors RSI",
+    "Coppock Curve",
+    "Detrended Price Oscillator",
+    "Directional Movement",
+    "Donchian Channels",
+    "Double EMA",
+    "Ease of Movement",
+    "Elder's Force Index",
+    "Envelopes",
+    "Fisher Transform",
+    "Historical Volatility",
+    "Hull Moving Average",
+    "Ichimoku Cloud",
+    "Keltner Channels",
+    "Klinger Oscillator",
+    "Know Sure Thing",
+    "Least Squares Moving Average",
+    "Linear Regression Curve",
+    "Linear Regression Slope",
+    "MA Cross",
+    "MA with EMA Cross",
+    "MACD",
+    "Majority Rule",
+    "Mass Index",
+    "McGinley Dynamic",
+    "Momentum",
+    "Money Flow Index",
+    "Moving Average",
+    "Moving Average Adaptive",
+    "Moving Average Channel",
+    "Moving Average Double",
+    "Moving Average Exponential",
+    "Moving Average Hamming",
+    "Moving Average Multiple",
+    "Moving Average Triple",
+    "Moving Average Weighted",
+    "Net Volume",
+    "On Balance Volume",
+    "Parabolic SAR",
+    "Price Channel",
+    "Price Oscillator",
+    "Price Volume Trend",
+    "Rate Of Change",
+    "Relative Strength Index",
+    "Relative Vigor Index",
+    "SMI Ergodic Indicator/Oscillator",
+    "Smoothed Moving Average",
+    "Standard Deviation",
+    "Standard Error",
+    "Standard Error Bands",
+    "Stochastic",
+    "Stochastic RSI",
+    "Super Trend",
+    "Trend Strength Index",
+    "Triple EMA",
+    "TRIX",
+    "True Strength Index",
+    "Ultimate Oscillator",
+    "Volatility Close-to-Close",
+    "Volatility Index",
+    "Volatility O-H-L-C",
+    "Volatility Zero Trend Close-to-Close",
+    "Volume",
+    "Volume Oscillator",
+    "Volume Profile Visible Range",
+    "Vortex Indicator",
+    "VWAP",
+    "VWMA",
+    "Williams %R"
+]
+
+
+def financial_charting(request):
+    print(request)
+    go_completion = client.chat.completions.create(
+    model="gpt-4o-mini",
+    temperature=0,
+    messages=[
+        {"role": "user", "content": f"Based on the following request: '{request}', determine the technical indicators directly needed for the chart choose from {technical_indicators}. Return only the exact names of the indicators spaced by a , (e.g., 'Volatility Index') with no explanation or additional text. ALWAYS RETURN THE VOLUME ALONG WITH THE INDICATORS THEY ASK FOR. ONLY RETURN THE INDICATORS THEY ASK FOR. IF THEY DONT EXPLICITLY ASK FOR TECHNCIAL INDICATORS RETURN ABSOLUTELY NOTHING, AND ONLY RETRUN TECHNICAL INDICATORS FROM THE LIST, MAKE NONE UP YOURSELF. ONLY UP TO FIVE INDICATORS ARE ALLOWED, NO MORE!"}
+    ]
     )
-    resp = response.choices[0].message.content
-    print(resp)
-    dictionary_resp = json.loads(resp)
+    final_resp = go_completion.choices[0].message.content
+    print(final_resp)
 
-    # Fetch and upload the chart image
-    catbox_url = fetch_and_upload_chart(
-        symbol=dictionary_resp['symbol'],
-        interval=dictionary_resp['interval'],
-        range=dictionary_resp['range'],
-        theme=dictionary_resp['theme'],
-        studies=dictionary_resp['studies'],
-        chart_style=dictionary_resp['style']
+    final_resp = final_resp.split(',')
+    print(f'the list of indicators: {final_resp}')
+    list_of_technicals = []
+    [list_of_technicals.append(var) for var in final_resp]
+    
+    full_data = []
+    for fin_var in list_of_technicals:
+        new_var = find_indicator(my_json, fin_var)
+        if new_var:  # Append only if new_var is not None
+            full_data.append(new_var)
+    final_data = ''.join(full_data)
+    print(f"the data retrieved through RAG {final_data}")
+
+
+    completion = client.chat.completions.create(
+    model="gpt-4o",
+    temperature=0,
+    messages=[
+        {"role": "user", "content": f""""
+    Generate Python code for the following request: '{request}'. Use the following data for studies:
+    {full_data}. 
+
+    Each indicator's 'name' should appear in the 'studies' section of the payload, with appropriate inputs and overrides. Return up to the response (stop before response.json()) in the code and ONLY return the code, no explanations or additional text. THE RANGE IS THE CHART TIMEFRAME THAT THEY WANT SO IF THEY ASK FOR A 1 DAY CHART THE RANGE SHOULD BE 1D THE RANGE CAN ONLY BE: 1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD, MTD, YTD, THE INTERVAL I THE PERIOD BETWEEN DATA POINTS ON THE CHART. ALWAYS KEEP "showMainPane": True unless explicity specified. THE NAMES OF THE INDICATORS THAT YOU SHOULD PUT IN THE REQUEST ARE {final_resp} """}
+ ]
     )
-    return f'<Image url="{catbox_url}" />'
+    response = completion.choices[0].message.content
+    print(f'the response \n\n\n {response}')
+
+    if response.startswith("```python"):
+        # Remove the starting and ending code block markers
+        response = response.replace("```python", "").replace("```", "")
+        response = autopep8.fix_code(response)
+        
+    else:
+        pass
 
 
+    import os
+    import io
+    import sys
+    response = response.replace("false", "False").replace('true','True')
+    response = response.replace('{YOUR_API_KEY}',os.getenv('CHART_IMG_TOKEN'))
+    response = f'{response}\n\n{save_code}'
+    captured_output = io.StringIO()
+    sys.stdout = captured_output
+    exec(response)
+    
+    
+    return captured_output.getvalue().strip()
 
 chart_img_tool = Tool(
     name="chart_img_tool",
-    func=generate_chart_img,
+    func=financial_charting,
     description="""
-    SPECIFICALLY FOR FINANCIAL CHARTS, USE PLOTTING TOOL FOR GENERAL PLOTS!
-    Generate a trading chart image with the CHART-IMG API based on user specifications and uploads it to Catbox.
+    Generate a chart image based on the user's request and upload it to Catbox.
 
+    This function integrates with the CHART-IMG API to create trading charts and
+    uses the Catbox API to upload the chart directly, returning the final URL of the chart.
+    
     Args:
-        request (str): A user-friendly description of the chart, including the symbol, interval, theme, style, 
-                       and any technical indicators or other preferences.
+        request (str): A natural language description of the chart the user wants.
+                       Example: "Cisco's chart for the last 1 day as a line with as many indicators as you can think of."
 
     Returns:
-        str: URL of the generated and uploaded chart image.
-    """
+        str: The URL of the uploaded chart image hosted on Catbox.
+        
+    Example Usage in a LangChain Agent:
+        - Input: "Generate a candlestick chart for BTC/USDT over the last 1 month with RSI and MA indicators."
+        - Output: A URL to the chart image, e.g., "https://files.catbox.moe/xyz.png"
+
+    Agent Behavior:
+        - Accepts a natural language prompt describing the desired chart.
+        - Parses the request into API parameters using OpenAI's GPT model.
+        - Fetches the chart using the CHART-IMG API.
+        - Directly uploads the chart image to Catbox without saving it locally.
+        - Returns the final Catbox-hosted URL for user consumption.
+
+       """
 )
-
-
 
 
 

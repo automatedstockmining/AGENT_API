@@ -28,3 +28,5 @@ gradio
 googlesearch-python
 huggingface-hub
 chromadb
+black
+autopep8
