@@ -683,9 +683,10 @@ def financial_charting(request):
     response = f'{response}\n\n{save_code}'
     captured_output = io.StringIO()
     sys.stdout = captured_output
+    
     exec(response)
-    
-    
+
+    print(f'the url {captured_output.getvalue().strip()}')
     return captured_output.getvalue().strip()
 
 chart_img_tool = Tool(
