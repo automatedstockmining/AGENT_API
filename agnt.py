@@ -33,11 +33,22 @@ from langchain.agents import initialize_agent, AgentType
 from langchain.memory import ConversationBufferMemory
 import http.client
 from langchain.tools import tool
+import logging
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,  # Set the logging level
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Log to console
+        logging.FileHandler("app.log")  # Log to a file named app.log
+    ]
+)
 
 
 @tool
 def chart_analyse(url_description: str) -> str:
+
     """
     SEPERATE THE IMAGE URL AND THE DESCRIPTION WITH A COMMA. PASS THEM IN AS NORMAL STRINGS NOT DICTIONARIES 
     Analyse a chart image and provide detailed insights.
@@ -53,13 +64,13 @@ def chart_analyse(url_description: str) -> str:
         str: The API's response containing the analysis of the chart.
     """
     split_on_comma = url_description
-    print(f'the concatenated string: {split_on_comma}')
+    logging.info(f'the concatenated string: {split_on_comma}')
     split_sentance = split_on_comma.split(',')
-    print(f'the re-split sentance {split_sentance}')
+    logging.info(f'the re-split sentance {split_sentance}')
     image_url = split_sentance[0]
-    print(f'the image url: {image_url}')
+    logging.info(f'the image url: {image_url}')
     description = " ".join(split_sentance[1:])
-    print(f'the description: {description}')
+    logging.info(f'the description: {description}')
     conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
     key = os.getenv('RAPID_TOKEN')  # Ensure this environment variable is set
     payload = '{{"message":"{}","conversation_id":null,"tone":"BALANCED","markdown":false,"photo_url":"{}"}}'.format(description, image_url)
@@ -74,6 +85,7 @@ def chart_analyse(url_description: str) -> str:
     res = conn.getresponse()
     data = res.read()
     return data.decode("utf-8")
+
 chart_analyse_tool = Tool(
     name="Chart Analyse Tool",
     func=chart_analyse,
