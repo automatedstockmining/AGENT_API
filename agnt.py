@@ -49,9 +49,7 @@ logging.basicConfig(
 @tool
 def chart_analyse(url_description: str) -> str:
     """
-    analyses a chart. INPUT THE IMAGE URL INSIDE A DESCRIPTION OF WHAT YOU WANT ANALYSIS YOU WANT INSIDE ONE STRING
-    Returns:
-        str: The API's response containing the analysis of the chart.
+    takes in a natural language request with a description of how you want the chart analysed, inside this description somewhere, make sure the image url is included. IT RETURNS THE CHART ANALYSIS
     """
     pattern = r'https?://[^\s]+'
     match = re.search(pattern, url_description)
@@ -107,9 +105,7 @@ chart_analyse_tool = Tool(
     name="Chart Analyse Tool",
     func=chart_analyse,
     description=(
-        "This tool takes a chart image URL and a description/context as input. SEPERATE THE IMAGE URL AND THE DESCRIPTION WITH A COMMA. PASS THEM IN AS NORMAL STRINGS NOT DICTIONARIES "
-        "It analyzes the chart and returns detailed insights based on the provided data."
-    )
+        '''takes in a natural language request with a description of how you want the chart analysed, inside this description somewhere, make sure the image url is included. IT RETURNS THE CHART ANALYSIS''')
 )
 
 def truncate_with_qwen(text: str, max_tokens: int = 10000) -> str:
