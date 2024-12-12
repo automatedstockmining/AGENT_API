@@ -638,6 +638,146 @@ technical_indicators = [
 ]
 
 
+import logging
+def generate_chart_img(request: str) -> str:
+    """
+    Generate a chart image based on the user's request and upload it to Catbox.
+
+    This function integrates with the CHART-IMG API to create trading charts and
+    uses the Catbox API to upload the chart directly, returning the final URL of the chart.
+    
+    Args:
+        request (str): A natural language description of the chart the user wants.
+                       Example: "Cisco's chart for the last 1 day as a line with as many indicators as you can think of."
+
+    Returns:
+        str: The URL of the uploaded chart image hosted on Catbox.
+        
+    Example Usage in a LangChain Agent:
+        - Input: "Generate a candlestick chart for BTC/USDT over the last 1 month with RSI and MA indicators."
+        - Output: A URL to the chart image, e.g., "https://files.catbox.moe/xyz.png"
+
+    Agent Behavior:
+        - Accepts a natural language prompt describing the desired chart.
+        - Parses the request into API parameters using OpenAI's GPT model.
+        - Fetches the chart using the CHART-IMG API.
+        - Directly uploads the chart image to Catbox without saving it locally.
+        - Returns the final Catbox-hosted URL for user consumption.
+
+      """
+    from black import format_str, FileMode
+import autopep8
+
+with open('formatted-indicators-json.txt','r') as file:
+    read = file.read()
+my_json = ast.literal_eval(read)
+
+save_code = """
+with open('technical_chart.png','wb') as file:
+
+    file.write(response.content)
+"""
+
+def find_indicator(data, name):
+    for item in data:
+        if item.get("indicator name") == name:
+            return item['description']
+    return None  # Return None if the indicator is not found
+
+
+technical_indicators = [
+    "Accumulation/Distribution",
+    "Accumulative Swing Index",
+    "Advance/Decline",
+    "Arnaud Legoux Moving Average",
+    "Aroon",
+    "Average Directional Index",
+    "Average True Range",
+    "Awesome Oscillator",
+    "Balance of Power",
+    "Bollinger Bands",
+    "Bollinger Bands %B",
+    "Bollinger Bands Width",
+    "Chaikin Money Flow",
+    "Chaikin Oscillator",
+    "Chaikin Volatility",
+    "Chande Kroll Stop",
+    "Chande Momentum Oscillator",
+    "Chop Zone",
+    "Choppiness Index",
+    "Commodity Channel Index",
+    "Connors RSI",
+    "Coppock Curve",
+    "Detrended Price Oscillator",
+    "Directional Movement",
+    "Donchian Channels",
+    "Double EMA",
+    "Ease of Movement",
+    "Elder's Force Index",
+    "Envelopes",
+    "Fisher Transform",
+    "Historical Volatility",
+    "Hull Moving Average",
+    "Ichimoku Cloud",
+    "Keltner Channels",
+    "Klinger Oscillator",
+    "Know Sure Thing",
+    "Least Squares Moving Average",
+    "Linear Regression Curve",
+    "Linear Regression Slope",
+    "MA Cross",
+    "MA with EMA Cross",
+    "MACD",
+    "Majority Rule",
+    "Mass Index",
+    "McGinley Dynamic",
+    "Momentum",
+    "Money Flow Index",
+    "Moving Average",
+    "Moving Average Adaptive",
+    "Moving Average Channel",
+    "Moving Average Double",
+    "Moving Average Exponential",
+    "Moving Average Hamming",
+    "Moving Average Multiple",
+    "Moving Average Triple",
+    "Moving Average Weighted",
+    "Net Volume",
+    "On Balance Volume",
+    "Parabolic SAR",
+    "Price Channel",
+    "Price Oscillator",
+    "Price Volume Trend",
+    "Rate Of Change",
+    "Relative Strength Index",
+    "Relative Vigor Index",
+    "SMI Ergodic Indicator/Oscillator",
+    "Smoothed Moving Average",
+    "Standard Deviation",
+    "Standard Error",
+    "Standard Error Bands",
+    "Stochastic",
+    "Stochastic RSI",
+    "Super Trend",
+    "Trend Strength Index",
+    "Triple EMA",
+    "TRIX",
+    "True Strength Index",
+    "Ultimate Oscillator",
+    "Volatility Close-to-Close",
+    "Volatility Index",
+    "Volatility O-H-L-C",
+    "Volatility Zero Trend Close-to-Close",
+    "Volume",
+    "Volume Oscillator",
+    "Volume Profile Visible Range",
+    "Vortex Indicator",
+    "VWAP",
+    "VWMA",
+    "Williams %R"
+]
+
+
 def financial_charting(request):
     print(request)
     go_completion = client.chat.completions.create(
@@ -693,14 +833,38 @@ def financial_charting(request):
     response = response.replace("false", "False").replace('true','True')
     response = response.replace('{YOUR_API_KEY}',os.getenv('CHART_IMG_TOKEN'))
     response = f'{response}\n\n{save_code}'
-    captured_output = io.StringIO()
-    sys.stdout = captured_output
-    
     exec(response)
+    # File path to upload
+    file_path = "technical_chart.png"
 
-    print(f'the url {captured_output.getvalue().strip()}')
-    return captured_output.getvalue().strip()
+    # 0x0.st upload endpoint
+    upload_url = "https://0x0.st/"
 
+   
+    with open(file_path, "rb") as file:
+        response = requests.post(upload_url, files={"file": file})
+        upload_url = "https://catbox.moe/user/api.php"
+        with open(file_path, "rb") as file:
+            payload = {
+                "reqtype": "fileupload",
+                "userhash": "",  # Optional, leave empty for anonymous upload
+            }
+            files = {
+                "fileToUpload": file
+            }
+            response = requests.post(upload_url, data=payload, files=files)
+
+        # Check the response
+        if response.status_code == 200:
+            uploaded_url = response.text.strip()  # The response is the URL
+            logging.info(f"File uploaded successfully: {uploaded_url}")
+            return uploaded_url
+        else:
+            logging.error(f"Failed to upload file. Status Code: {response.status_code}")
+            logging.error(f"Response Text: {response.text}")
+            return None
+
+financial_charting('plot a 1d chart with the price of cisco stock with the awesome oscillator')
 chart_img_tool = Tool(
     name="chart_img_tool",
     func=financial_charting,
