@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')
 
-
+import re
 from langchain_community.utilities import GoogleSearchAPIWrapper
 from langchain_core.tools import Tool
 from langchain.chat_models import ChatOpenAI
@@ -48,53 +48,60 @@ logging.basicConfig(
 
 @tool
 def chart_analyse(url_description: str) -> str:
-
     """
-    SEPERATE THE IMAGE URL AND THE DESCRIPTION WITH A COMMA. PASS THEM IN AS NORMAL STRINGS NOT DICTIONARIES 
-    Analyse a chart image and provide detailed insights.
-
-    This tool sends a chart image and a description to a remote analysis API 
-    and retrieves a detailed response about the chart's content.
-
-    Args:
-        url (str): The URL of the chart image to analyze.
-        description (str): A brief description or context for the chart to guide the analysis.
-
+    analyses a chart. INPUT THE IMAGE URL INSIDE A DESCRIPTION OF WHAT YOU WANT ANALYSIS YOU WANT INSIDE ONE STRING
     Returns:
         str: The API's response containing the analysis of the chart.
     """
-    split_on_comma = url_description
-    logging.info(f'the concatenated string: {split_on_comma}')
-    split_sentance = split_on_comma.split(',')
-    logging.info(f'the re-split sentance {split_sentance}')
-    image_url = split_sentance[0]
-    logging.info(f'the image url: {image_url}')
-    description = " ".join(split_sentance[1:])
-    logging.info(f'the description: {description}')
-    conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
-    key = os.getenv('RAPID_TOKEN')  # Ensure this environment variable is set
-    payload = """{
-        "message": "{descriptipon_request}",
-        "conversation_id": null,
-        "tone": "BALANCED",
-        "markdown": false,
-        "photo_url": "{image_urlurl}"
-    }""".format(description_request = description, image_urlurl = image_url )
+    pattern = r'https?://[^\s]+'
+    match = re.search(pattern, url_description)
+    if not match:
+        return "Error: No valid URL found in the input."
 
-    # Define headers
+    image_url = match.group()
+    print(f'the image url: {image_url.strip('.,;!?()[]{}<>')}')
+    description = url_description.replace(image_url,'')
+    print(f'the description {description}')
+    
+    import requests
+    import json
+
+    url = "https://copilot5.p.rapidapi.com/copilot"
+
+    payload = {
+        "message": f"{str(description)}",
+        "conversation_id": None,
+        "tone": "BALANCED",
+        "markdown": False,
+        "photo_url": f"{str(image_url.strip('.,;!?()[]{}<>'))}"
+    }
     headers = {
-        'x-rapidapi-key': os.getenv('RAPID_TOKEN'),
-        'x-rapidapi-host': "copilot5.p.rapidapi.com",
-        'Content-Type': "application/json"
+        "x-rapidapi-key": os.getenv('RAPID_TOKEN'),
+        "x-rapidapi-host": "copilot5.p.rapidapi.com",
+        "Content-Type": "application/json"
     }
 
-    # Send POST request
-    conn.request("POST", "/copilot", payload, headers)
+    response = requests.post(url, json=payload, headers=headers)
 
-    # Get response
-    res = conn.getresponse()
-    data = res.read()
-    return data.decode("utf-8")
+    # Decode the response content as a string
+    response_text = response.content.decode('utf-8')
+
+    # Clean and parse the response
+    if response_text.startswith("b'") or response_text.startswith('b"'):
+        # Remove leading "b'" or 'b"'
+        response_text = response_text[2:-1]
+        
+        # Replace escaped single quotes with double quotes to ensure JSON compatibility
+        response_text = response_text.replace("\\'", "'").replace("'", '"')
+
+    # Parse the cleaned response as JSON
+    response_data = json.loads(response_text)
+
+    # Extract the desired message
+    if 'data' in response_data and 'message' in response_data['data']:
+        return response_data['data']['message']
+    else:
+        return "Key 'data' or 'message' not found in the response."
 
 chart_analyse_tool = Tool(
     name="Chart Analyse Tool",
