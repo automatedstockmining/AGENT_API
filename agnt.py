@@ -73,8 +73,16 @@ def chart_analyse(url_description: str) -> str:
     logging.info(f'the description: {description}')
     conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
     key = os.getenv('RAPID_TOKEN')  # Ensure this environment variable is set
-    payload = '{{"message":"{}","conversation_id":null,"tone":"BALANCED","markdown":false,"photo_url":"{}"}}'.format(description, image_url)
+    payload_dict = {
+        "message": description,
+        "conversation_id": None,
+        "tone": "BALANCED",
+        "markdown": False,
+        "photo_url": image_url
+    }
 
+    # Serialize the dictionary to JSON
+    payload = json.dumps(payload_dict)
     headers = {
         'x-rapidapi-key': key,
         'x-rapidapi-host': "copilot5.p.rapidapi.com",
@@ -864,7 +872,6 @@ def financial_charting(request):
             logging.error(f"Response Text: {response.text}")
             return None
 
-financial_charting('plot a 1d chart with the price of cisco stock with the awesome oscillator')
 chart_img_tool = Tool(
     name="chart_img_tool",
     func=financial_charting,
