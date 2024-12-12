@@ -59,7 +59,7 @@ def chart_analyse(url_description: str) -> str:
         return "Error: No valid URL found in the input."
 
     image_url = match.group()
-    print(f'the image url: {image_url.strip('.,;!?()[]{}<>')}')
+    
     description = url_description.replace(image_url,'')
     print(f'the description {description}')
     
