@@ -73,23 +73,25 @@ def chart_analyse(url_description: str) -> str:
     logging.info(f'the description: {description}')
     conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
     key = os.getenv('RAPID_TOKEN')  # Ensure this environment variable is set
-    payload_dict = {
-        "message": description,
-        "conversation_id": None,
+    payload = """{
+        "message": "{descriptipon_request}",
+        "conversation_id": null,
         "tone": "BALANCED",
-        "markdown": False,
-        "photo_url": image_url
-    }
+        "markdown": false,
+        "photo_url": "{image_urlurl}"
+    }""".format(description_request = description, image_urlurl = image_url )
 
-    # Serialize the dictionary to JSON
-    payload = json.dumps(payload_dict)
+    # Define headers
     headers = {
-        'x-rapidapi-key': key,
+        'x-rapidapi-key': os.getenv('RAPID_TOKEN'),
         'x-rapidapi-host': "copilot5.p.rapidapi.com",
         'Content-Type': "application/json"
     }
 
+    # Send POST request
     conn.request("POST", "/copilot", payload, headers)
+
+    # Get response
     res = conn.getresponse()
     data = res.read()
     return data.decode("utf-8")
