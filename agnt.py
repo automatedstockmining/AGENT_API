@@ -191,7 +191,7 @@ def chat(query):
     payload = "{{\"message\":\"{a} {b}\",\"conversation_id\":null,\"tone\":\"BALANCED\",\"markdown\":false,\"photo_url\":null}}".format(a = query, b = 'respond in a concise way with the data that i have asked for, never leave out any data if i ask you for multiple data points you search for them and return them')
 
     headers = {
-        'x-rapidapi-key': f'{rapid_token}',
+        'x-rapidapi-key': f'{os.getenv('RAPID_TOKEN')}',
         'x-rapidapi-host': "copilot5.p.rapidapi.com",
         'Content-Type': "application/json"
     }
