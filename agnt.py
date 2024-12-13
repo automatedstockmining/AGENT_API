@@ -272,7 +272,9 @@ def generate_and_upload_plot(request):
     response = requests.post(url, json=payload, headers=headers)
     print(f'the response status {response}')
     response = response.json()
+    print('coverted to json')
     response = response['data']['message']
+    print(f'got the response: {response}')
     response = f'{response}\n\n {end_code}'
     exec(response)
     print(response)
