@@ -252,18 +252,11 @@ def generate_and_upload_plot(request):
 
 
    
-    with open('saved_plot.png', 'wb') as file:
-        file.truncate(0)
+ 
     import requests
     end_code = '''
-        buffer = io.BytesIO()
-        plt.savefig(buffer, format='png')
-        buffer.seek(0)
-
-
-   
-
-
+plt.savefig('plot_chart.png')
+    
     '''
     url = "https://copilot5.p.rapidapi.com/copilot"
     
@@ -293,14 +286,34 @@ def generate_and_upload_plot(request):
     print('successfully executed the code')
     print(response)
        # Upload the plot from the memory buffer
-    upload_url = "https://catbox.moe/user/api.php"
-    files = {'fileToUpload': ('plot.png', buffer.getvalue(), 'image/png')}
-    data = {'reqtype': 'fileupload'}
+    file_path = "plot_chart.png"
 
-    upload_response = requests.post(upload_url, files=files, data=data)
-    upload_response.raise_for_status()
+    # 0x0.st upload endpoint
+    upload_url = "https://0x0.st/"
 
-    return upload_response.text.strip()
+   
+    with open(file_path, "rb") as file:
+        response = requests.post(upload_url, files={"file": file})
+        upload_url = "https://catbox.moe/user/api.php"
+        with open(file_path, "rb") as file:
+            payload = {
+                "reqtype": "fileupload",
+                "userhash": "",  # Optional, leave empty for anonymous upload
+            }
+            files = {
+                "fileToUpload": file
+            }
+            response = requests.post(upload_url, data=payload, files=files)
+
+        # Check the response
+        if response.status_code == 200:
+            uploaded_url = response.text.strip()  # The response is the URL
+            logging.info(f"File uploaded successfully: {uploaded_url}")
+            return uploaded_url
+        else:
+            logging.error(f"Failed to upload file. Status Code: {response.status_code}")
+            logging.error(f"Response Text: {response.text}")
+            return None
 
 plotting_tool = Tool(
     name="plotting_tool",
