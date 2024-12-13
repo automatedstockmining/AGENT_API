@@ -270,14 +270,14 @@ def generate_and_upload_plot(request):
     }
 
     response = requests.post(url, json=payload, headers=headers)
-    
+    print(f'the response status {response}')
     response = response.json()
     response = response['data']['message']
     response = f'{response}\n\n {end_code}'
     exec(response)
     print(response)
     url = "https://catbox.moe/user/api.php"
-    file_path = '/Users/jamesmacquillan/Documents/developing investing bots/saved_plot.png'
+    file_path = 'saved_plot.png'
     # Prepare the form data
     data = {
         'reqtype': 'fileupload',  # Required parameter for Catbox API
