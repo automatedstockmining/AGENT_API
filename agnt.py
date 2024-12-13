@@ -254,6 +254,9 @@ def generate_and_upload_plot(request):
    
  
     import requests
+    with open("plot_chart.png", "wb") as file:
+    # Write an empty byte string to the file
+        file.write(b'')
     end_code = '''
 plt.savefig('plot_chart.png')
     
