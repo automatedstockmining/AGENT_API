@@ -530,6 +530,7 @@ def fetch_and_upload_chart(symbol, interval, range, theme, studies, chart_style)
 
 def generate_chart_img(request: str) -> str:
     """
+    THIS TOOL IS ONLY FOR STOCK AND CRYPTO PRICE CHARTS WITH TECHNCIAL INDICATORS, FOR ANY OTHER PLOTS USE MATPLOTLIB PLOTTING TOOL
     Generate a chart image based on the user's request and upload it to Catbox.
 
     This function integrates with the CHART-IMG API to create trading charts and
