@@ -277,6 +277,7 @@ def generate_and_upload_plot(request):
     print(f'got the response: {response}')
     response = f'{response}\n\n {end_code}'
     exec(response)
+    print('successfully executed the code')
     print(response)
     url = "https://catbox.moe/user/api.php"
     file_path = 'saved_plot.png'
