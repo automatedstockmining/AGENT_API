@@ -682,6 +682,7 @@ technical_indicators = [
 import logging
 def generate_chart_img(request: str) -> str:
     """
+    THIS TOOL IS ONLY FOR GENERATING STOCK PRICE PLOTS FOR STOCKS AND CRYPTO WITH TECHNCIAL INDICATORS, FOR ANY OTHER PLOTTING REQUESTS USE THE MATPLOTLIB PLOTTING TOOL
     Generate a chart image based on the user's request and upload it to Catbox.
 
     This function integrates with the CHART-IMG API to create trading charts and
@@ -909,6 +910,8 @@ chart_img_tool = Tool(
     name="chart_img_tool",
     func=financial_charting,
     description="""
+    THIS TOOL IS ONLY FOR GENERATING STOCK PRICE PLOTS FOR STOCKS AND CRYPTO WITH TECHNCIAL INDICATORS, FOR ANY OTHER PLOTTING REQUESTS USE THE MATPLOTLIB PLOTTING TOOL
+    
     Generate a chart image based on the user's request and upload it to Catbox.
 
     This function integrates with the CHART-IMG API to create trading charts and
