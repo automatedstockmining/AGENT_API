@@ -233,78 +233,79 @@ from openai import OpenAI
 
 
 @tool()
-def generate_and_upload_plot(request, output_file="plot.png", openai_api_key=key):
+def generate_and_upload_plot(request):
     
     """
         Purpose:
     - Generates custom plots using Python's Matplotlib library.
     - Suitable for requests involving general-purpose data visualization, such as line plots, bar charts, histograms, or scatter plots.
-
-    YOU MUST INPUT THE DATA FROM THE SEARCH TOOL INTO THIS TOOL FOR IT TO WORK. 
-    THIS TOOL DOES NOT HAVE PRE-LOADED DATA AND REQUIRES IT FROM THE USER. 
-    ALWAYS ENSURE THE DATA IS PASSED INTO THE REQUEST AND CLEARLY DESCRIBE THE PLOT NEEDED.
-    EXECUTE THIS TOOL ONLY WHEN YOU HAVE ALL REQUIRED INFORMATION.
+    - you do not need to input data, just give a natural language request
+    - returns the url of the chart
     """
 
-    # Initialize OpenAI client
-    client = OpenAI(api_key=key)
+   
+    with open('saved_plot.png', 'wb') as file:
+        file.truncate(0)
+    import requests
+    end_code = '''
 
-    # Request Matplotlib code from OpenAI
-    response = client.chat.completions.create(
-        model='gpt-3.5-turbo',
-        max_tokens=2000,
-        messages=[{
-            'role': 'user',
-            'content': (
-                f"Based off of {request}, generate matplotlib code to create the chart requested. "
-                "only use matplotlib, pandas, numpy etc not other libraries"
-                "ALWAYS include plt.savefig('plot.png') at the end of the code to save the figure. "
-                "RETURN ONLY THE CODE AND NOTHING ELSE, NO EXPLANATION. DO NOT INCLUDE QUOTES AT THE START OR END OR PYTHON ON ANYTHING SIMILAR, JUST THE RAW PYTHON CODE. ALWAYS CODE THE WHOLE SCRIPT, ASSIGNING THE DATA THE USER MAY PROVIDE AS VARIBALES, NEVER RETURN A SNIPPET, ONLY THE WHOLE SCRIPT"
-            )
-        }],
-        temperature=0
-    )
 
-    # Extract the Matplotlib code from the response
-    model_response = response.choices[0].message.content.strip()
+    plt.savefig('saved_plot.png')
 
-    try:
-        # Debug: Print the generated code (optional)
-        print("Executing the following code:\n", model_response)
 
-        # Execute the Matplotlib code
-        exec(model_response)
+    '''
+    url = "https://copilot5.p.rapidapi.com/copilot"
 
-        # Upload the plot to Catbox
-        catbox_upload_url = "https://catbox.moe/user/api.php"
-        with open(output_file, "rb") as file:
-            upload_response = requests.post(
-                catbox_upload_url, 
-                data={"reqtype": "fileupload"}, 
-                files={"fileToUpload": file}
-            )
+    payload = {
+        "message": "{a}---{b}".format(a = request, b ='Search the web and find the data needed for their request, then return the matplotlib python code to plot this data. RETURN NOTHING ELSE OTHER THAN THE MATPLOTLIB CODE, NO EXPLANATIONS ETC. YOU SEARCH THE WEB FOR THE DATA NEEDED FOR THEIR PLOT AND PLOT THE REAL DATA. DO NOT INCLUDE PLT.SHOW IN THE CODE'),
+        "conversation_id": None,
+        "tone": "BALANCED",
+        "markdown": False,
+        "photo_url": None
+    }
+    headers = {
+        "x-rapidapi-key": os.getenv('RAPID_TOKEN'),
+        "x-rapidapi-host": "copilot5.p.rapidapi.com",
+        "Content-Type": "application/json"
+    }
 
-        # Check response and return Catbox URL
-        if upload_response.status_code == 200 and upload_response.text.startswith("https://"):
-            return upload_response.text.strip()  # Return the Catbox URL
-        else:
-            return f"Error: Failed to upload to Catbox. Status: {upload_response.status_code}, Response: {upload_response.text}"
+    response = requests.post(url, json=payload, headers=headers)
+    
+    response = response.json()
+    response = response['data']['message']
+    response = f'{response}\n\n {end_code}'
+    exec(response)
+    print(response)
+    url = "https://catbox.moe/user/api.php"
+    file_path = '/Users/jamesmacquillan/Documents/developing investing bots/saved_plot.png'
+    # Prepare the form data
+    data = {
+        'reqtype': 'fileupload',  # Required parameter for Catbox API
+    }
+    # Open the file in binary mode
+    with open(file_path, 'rb') as file:
+        files = {
+            'fileToUpload': file
+        }
+        # Send the POST request
+        response = requests.post(url, data=data, files=files)
 
-    except Exception as e:
-        return f"Error: {str(e)}"
+    if response.status_code == 200:
+        # Return the URL of the uploaded file
+        return response.text.strip()
+    else:
+        raise Exception(f"Failed to upload: {response.status_code}, {response.text}")
+
 plotting_tool = Tool(
     name="plotting_tool",
     func=generate_and_upload_plot,
-    description="""
-     - Generates custom plots using Python's Matplotlib library.
+    description=
+        """
+        Purpose:
+    - Generates custom plots using Python's Matplotlib library.
     - Suitable for requests involving general-purpose data visualization, such as line plots, bar charts, histograms, or scatter plots.
-
-    IN YOUR RESPONSE TAKE THE LINK RETURNED AND PASS IT TO THE USER UNDER 'HERE' REPLACE IT WITH THE LINK
-    YOU MUST INPUT THE DATA FROM THE SEARCH TOOL INTO THIS TOOL FOR IT TO WORK. 
-    THIS TOOL DOES NOT HAVE PRE-LOADED DATA AND REQUIRES IT FROM THE USER. 
-    ALWAYS ENSURE THE DATA IS PASSED INTO THE REQUEST AND CLEARLY DESCRIBE THE PLOT NEEDED.
-    EXECUTE THIS TOOL ONLY WHEN YOU HAVE ALL REQUIRED INFORMATION.
-    IF YOU DO NOT HAVE ALL O0F THE DATA NEEDED, INPUT WHAT YOU DO HAVE
+    - you do not need to input data, just give a natural language request
+    - returns the url of the chart
     """
     )
 from flask import Flask, request, jsonify, render_template
