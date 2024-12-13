@@ -235,6 +235,11 @@ from openai import OpenAI
 @tool()
 def generate_and_upload_plot(request):
     
+    import os
+    import io
+    import requests
+    import matplotlib.pyplot as plt
+
     """
         Purpose:
     - Generates custom plots using Python's Matplotlib library.
@@ -248,14 +253,17 @@ def generate_and_upload_plot(request):
         file.truncate(0)
     import requests
     end_code = '''
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
 
 
-    plt.savefig('saved_plot.png')
+   
 
 
     '''
     url = "https://copilot5.p.rapidapi.com/copilot"
-
+    
     payload = {
         "message": "{a}---{b}".format(a = request, b ='Search the web and find the data needed for their request, then return the matplotlib python code to plot this data. RETURN NOTHING ELSE OTHER THAN THE MATPLOTLIB CODE, NO EXPLANATIONS ETC. YOU SEARCH THE WEB FOR THE DATA NEEDED FOR THEIR PLOT AND PLOT THE REAL DATA. DO NOT INCLUDE PLT.SHOW IN THE CODE'),
         "conversation_id": None,
@@ -275,29 +283,21 @@ def generate_and_upload_plot(request):
     print('coverted to json')
     response = response['data']['message']
     print(f'got the response: {response}')
-    response = f'{response}\n\n {end_code}'
-    exec(response)
+    matplotlib_code = f'{response}\n\n {end_code}'
+    buffer = io.BytesIO()
+    exec(matplotlib_code, {"plt": plt, "io": io, "buffer": buffer})
+
     print('successfully executed the code')
     print(response)
-    url = "https://catbox.moe/user/api.php"
-    file_path = 'saved_plot.png'
-    # Prepare the form data
-    data = {
-        'reqtype': 'fileupload',  # Required parameter for Catbox API
-    }
-    # Open the file in binary mode
-    with open(file_path, 'rb') as file:
-        files = {
-            'fileToUpload': file
-        }
-        # Send the POST request
-        response = requests.post(url, data=data, files=files)
+       # Upload the plot from the memory buffer
+    upload_url = "https://catbox.moe/user/api.php"
+    files = {'fileToUpload': ('plot.png', buffer.getvalue(), 'image/png')}
+    data = {'reqtype': 'fileupload'}
 
-    if response.status_code == 200:
-        # Return the URL of the uploaded file
-        return response.text.strip()
-    else:
-        raise Exception(f"Failed to upload: {response.status_code}, {response.text}")
+    upload_response = requests.post(upload_url, files=files, data=data)
+    upload_response.raise_for_status()
+
+    return upload_response.text.strip()
 
 plotting_tool = Tool(
     name="plotting_tool",
