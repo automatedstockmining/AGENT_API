@@ -234,19 +234,22 @@ from openai import OpenAI
 
 @tool()
 def generate_and_upload_plot(request):
-    
+    """
+    Purpose:
+    - Generates a custom plot based on a natural language request using Python's Matplotlib library.
+    - Finds the necessary data, creates the plot, and uploads it to Catbox for public access.
+
+    Arguments:
+    - request (str): A natural language description of the desired plot and data.
+
+    Returns:
+    - str: URL of the uploaded plot image.
+    """
     import os
     import io
     import requests
     import matplotlib.pyplot as plt
 
-    """
-        Purpose:
-    - Generates custom plots using Python's Matplotlib library.
-    - Suitable for requests involving general-purpose data visualization, such as line plots, bar charts, histograms, or scatter plots.
-    - you do not need to input data, just give a natural language request
-    - returns the url of the chart
-    """
 
    
     with open('saved_plot.png', 'wb') as file:
@@ -303,12 +306,16 @@ plotting_tool = Tool(
     name="plotting_tool",
     func=generate_and_upload_plot,
     description=
-        """
-        Purpose:
-    - Generates custom plots using Python's Matplotlib library.
-    - Suitable for requests involving general-purpose data visualization, such as line plots, bar charts, histograms, or scatter plots.
-    - you do not need to input data, just give a natural language request
-    - returns the url of the chart
+    """
+    Purpose:
+    - Generates a custom plot based on a natural language request using Python's Matplotlib library.
+    - Finds the necessary data, creates the plot, and uploads it to Catbox for public access.
+
+    Arguments:
+    - request (str): A natural language description of the desired plot and data.
+
+    Returns:
+    - str: URL of the uploaded plot image.
     """
     )
 from flask import Flask, request, jsonify, render_template
