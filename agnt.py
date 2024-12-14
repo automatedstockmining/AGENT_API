@@ -826,7 +826,7 @@ def financial_charting(request):
     model="gpt-4o-mini",
     temperature=0,
     messages=[
-        {"role": "user", "content": f"Based on the following request: '{request}', determine the technical indicators directly needed for the chart choose from {technical_indicators}. Return only the exact names of the indicators spaced by a , (e.g., 'Volatility Index') with no explanation or additional text. ALWAYS RETURN THE VOLUME ALONG WITH THE INDICATORS THEY ASK FOR. ONLY RETURN THE INDICATORS THEY ASK FOR. IF THEY DONT EXPLICITLY ASK FOR TECHNCIAL INDICATORS RETURN ABSOLUTELY NOTHING, AND ONLY RETRUN TECHNICAL INDICATORS FROM THE LIST, MAKE NONE UP YOURSELF. ONLY UP TO FIVE INDICATORS ARE ALLOWED, NO MORE!"}
+        {"role": "user", "content": f"Based on the following request: '{request}', determine the technical indicators directly needed for the chart choose from {technical_indicators}. Return only the exact names of the indicators spaced by a , (e.g., 'Volatility Index') with no explanation or additional text. ALWAYS RETURN THE VOLUME ALONG WITH THE INDICATORS THEY ASK FOR. ONLY RETURN THE INDICATORS THEY ASK FOR. IF THEY DONT EXPLICITLY ASK FOR TECHNCIAL INDICATORS RETURN ABSOLUTELY NOTHING, AND ONLY RETRUN TECHNICAL INDICATORS FROM THE LIST, MAKE NONE UP YOURSELF. ONLY UP TO FIVE INDICATORS ARE ALLOWED, NO MORE! "}
     ]
     )
     final_resp = go_completion.choices[0].message.content
@@ -854,7 +854,7 @@ def financial_charting(request):
     Generate Python code for the following request: '{request}'. Use the following data for studies:
     {full_data}. 
 
-    Each indicator's 'name' should appear in the 'studies' section of the payload, with appropriate inputs and overrides. Return up to the response (stop before response.json()) in the code and ONLY return the code, no explanations or additional text. THE RANGE IS THE CHART TIMEFRAME THAT THEY WANT SO IF THEY ASK FOR A 1 DAY CHART THE RANGE SHOULD BE 1D THE RANGE CAN ONLY BE: 1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD, MTD, YTD, THE INTERVAL I THE PERIOD BETWEEN DATA POINTS ON THE CHART. ALWAYS KEEP "showMainPane": True unless explicity specified. THE NAMES OF THE INDICATORS THAT YOU SHOULD PUT IN THE REQUEST ARE {final_resp} """}
+    Each indicator's 'name' should appear in the 'studies' section of the payload, with appropriate inputs and overrides. Return up to the response (stop before response.json()) in the code and ONLY return the code, no explanations or additional text. THE RANGE IS THE CHART TIMEFRAME THAT THEY WANT SO IF THEY ASK FOR A 1 DAY CHART THE RANGE SHOULD BE 1D THE RANGE CAN ONLY BE: 1D, 5D, 1M, 3M, 6M, 1Y, 5Y, ALL, DTD, WTD - (1 week), MTD, YTD. YOU MUST ONLY USE A RANGE FROM THIS LIST OR IT WILL FAIL, CHOOSE THE CLOSEST TO THE REQUEST IF NEEDED, THE INTERVAL I THE PERIOD BETWEEN DATA POINTS ON THE CHART. ALWAYS KEEP "showMainPane": True unless explicity specified. THE NAMES OF THE INDICATORS THAT YOU SHOULD PUT IN THE REQUEST ARE {final_resp} """}
  ]
     )
     response = completion.choices[0].message.content
