@@ -963,15 +963,16 @@ def build_model(request):
     Returns:
     - str: The fully built financial model along with its calculations and results.
 
+    Example:
+        build_model('Build a Gordon Growth Model for Coca-Cola')
 
     Note:
     This tool is designed to function autonomously, ensuring all steps are handled without further input from the user.
     """
-    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "user", "content": f"YOU BUILD FINANCIAL MODELS, BASED ON: {request} YOU RETURN WHAT DATA WILL BE NEEDED IN ORDER TO BUILD THIS MODEL. BE VERY CONCISE AND STRUCTURE IT AS THOUGH YOU ARE ASKING SOMEONE TO GO AND FETCH THE DATA. INSTRUCT THEM ALSO TO GIVE YOU THE CURRENT MARKET PRICE "}
+            {"role": "user", "content": f"YOU BUILD FINANCIAL MODELS, BASED ON: {request} YOU RETURN WHAT DATA WILL BE NEEDED IN ORDER TO BUILD THIS MODEL AS WELL AS INSTRUCTIONS ON HOW TO BUILD THE MODEL. BE VERY CONCISE AND STRUCTURE IT AS THOUGH YOU ARE ASKING SOMEONE TO GO AND FETCH THE DATA THEN BUILD THE MODEL. KEEP IT VERY CONCISE WITH THE DATA THAT NEEDS TO BE FETCHED AND THE FORMULA FOR THE MODEL  "}
         ]
     )
     data_needed = completion.choices[0].message.content
@@ -981,36 +982,28 @@ def build_model(request):
     url = "https://copilot5.p.rapidapi.com/copilot"
 
     payload = {
-        "message": f"{data_needed} -- YOU DO NOT ASSUME ANY VALUES, YOU COLLECT EVERY SINGLE ONE. DO NOT RETURN LOTS OF TEXT, JUST THE REQUIRED NUMERICAL VALUES. REMEMBER YOU NEVER ASSUME ANY VALUES HOWEVER BASIC. YOU SEARCH TH WEB AND FIND THEM. RETURN ALL THE DATA AT ONCE IN THIS ONE REQUEST. DO NOT RETURN HOLD ON WHILE I FETCH THE DATA OR ANYTHING SIMILAR FETCH THE DATA AND RETURN IT NO MATTERN HOW LONG IT TAKES. YOU ARE ALLOWED TO TAKE SOME TIME TO RESPOND, WHATEVER YOU DO, DO NOT RESPOND WITH GIVE ME A MINUTE TO GATHER THAT DATA, JUST RESPOND WHEN YOURE READY WITH ALL THE DATA!",
+        "message": f"{data_needed} -- YOU DO NOT ASSUME ANY VALUES, YOU COLLECT EVERY SINGLE ONE. DO NOT RETURN LOTS OF TEXT, JUST THE REQUIRED NUMERICAL VALUES. REMEMBER YOU NEVER ASSUME ANY VALUES HOWEVER BASIC. YOU SEARCH TH WEB AND FIND THEM. RETURN ALL THE DATA AT ONCE IN THIS ONE REQUEST. DO NOT RETURN HOLD ON WHILE I FETCH THE DATA OR ANYTHING SIMILAR FETCH THE DATA AND RETURN IT NO MATTERN HOW LONG IT TAKES. YOU ARE ALLOWED TO TAKE SOME TIME TO RESPOND, WHATEVER YOU DO, DO NOT RESPOND WITH GIVE ME A MINUTE TO GATHER THAT DATA, JUST RESPOND WHEN YOURE READY WITH ALL THE DATA THEN YOU BUILD THE MODEL AS PER THE INSTRUCTIONS! AS WELL AS FETCHING THE DATA YOU MUST BUILD THE MODEL WITH THAT DATA AND COME TO A CONLCUSION AT THE END WITH THE RESULT OF THE CALCULATIONS!",
         "conversation_id": None,
         "tone": "BALANCED",
         "markdown": False,
         "photo_url": None
     }
     headers = {
-        "x-rapidapi-key": rapid_token,
+        "x-rapidapi-key": os.getenv('RAPID_TOKEN'),
         "x-rapidapi-host": "copilot5.p.rapidapi.com",
         "Content-Type": "application/json"
     }
 
     response = requests.post(url, json=payload, headers=headers)
     import time
-    time.sleep(7)
+    time.sleep(10)
     response = response.json()
-    
+    print(f'the gathered data: \n\n\n\n\n {response['data']['message']}')
     
 
     data_needed = completion.choices[0].message.content
 
-    model_builder = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[
-        {"role": "user", "content": f"BASED OFF OF THE USER RQUEST {request} and {response['data']['message']} build the model. YOU DO NOT ASK TEH USER TO DO ANYTHING OR ASK THEM TO FINISH OFF THE MODEL, YOU BUILD THE FULL AND COMPLETE MODEL. THIS IS NOT AN ILLUSTATIVE MODEL, THIS IS A FULL MATHEMATICAL MODEL AND AT THE END YOU ARRIVE AT THE CONCLUSION  AND RETURN THE RESULT OF YOUR CALCULATION WHETHER THAT BE A GROWTH RATE OR A ESTIMATED VALUE AND COMPARE IT TO THE CURRENT MARKET PRICE. YOU ONLY MODEL WHAT THE USER IS ASKIGN FOR AND STAY CONCISE, FOR EXAMPLE IF THEY ASK FOR A GROWTH RATE DONT BUILD THE FULL MODEL, JUST BUILD THE GROWTH RATE. DO NOT RESPOND IN MARKDOWN, JUST FORMATTED TEXT BUT INCLUDE ALL THE CALCULATIONS AND GIVE ALL YOUR WORKING AND COME TO A COCNLUSION. Present formulas and results in a cleaner format (e.g., with proper inline equations or tables) would improve readability."}
-    ],
-    max_tokens=5000
-)
-    data_needed = completion.choices[0].message.content
-    return model_builder.choices[0].message.content
+    return response['data']['message']
 modelling_tool = Tool(
     name="modelling_tool",
     func=build_model,
