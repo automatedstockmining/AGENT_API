@@ -939,7 +939,111 @@ chart_img_tool = Tool(
 )
 
 
+from openai import OpenAI
+@tool
+def build_model(request):
+    """
+    LangChain Tool: Build Financial Models
 
+    This function leverages OpenAI's GPT capabilities to build full, mathematical financial models 
+    based on user-provided specifications. It operates as follows:
+
+    1. Analyzes the user's request to identify the data needed to build the specified financial model.
+    2. Instructs an external service to fetch the required data comprehensively without assuming any values.
+    3. Constructs a complete financial model using the fetched data, returning the calculated results or insights.
+
+    Key Steps:
+    - Generates a concise list of data requirements based on the user's model request.
+    - Utilizes a secondary API to retrieve all necessary numerical values for the model.
+    - Employs GPT to build and execute the full model, producing a conclusion or comparison against market data.
+
+    Parameters:
+    - request (str): A textual description of the financial model to be built (e.g., "Build a Gordon Growth Model for Coca-Cola").
+
+    Returns:
+    - str: The fully built financial model along with its calculations and results.
+
+    Example:
+        build_model('Build a Gordon Growth Model for Coca-Cola')
+
+    Note:
+    This tool is designed to function autonomously, ensuring all steps are handled without further input from the user.
+    """
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "user", "content": f"YOU BUILD FINANCIAL MODELS, BASED ON: {request} YOU RETURN WHAT DATA WILL BE NEEDED IN ORDER TO BUILD THIS MODEL. BE VERY CONCISE AND STRUCTURE IT AS THOUGH YOU ARE ASKING SOMEONE TO GO AND FETCH THE DATA. INSTRUCT THEM ALSO TO GIVE YOU THE CURRENT MARKET PRICE "}
+        ]
+    )
+    data_needed = completion.choices[0].message.content
+    print(f'the data needed: {data_needed}')
+    import requests
+
+    url = "https://copilot5.p.rapidapi.com/copilot"
+
+    payload = {
+        "message": f"{data_needed} -- YOU DO NOT ASSUME ANY VALUES, YOU COLLECT EVERY SINGLE ONE. DO NOT RETURN LOTS OF TEXT, JUST THE REQUIRED NUMERICAL VALUES. REMEMBER YOU NEVER ASSUME ANY VALUES HOWEVER BASIC. YOU SEARCH TH WEB AND FIND THEM. RETURN ALL THE DATA AT ONCE IN THIS ONE REQUEST. DO NOT RETURN HOLD ON WHILE I FETCH THE DATA OR ANYTHING SIMILAR FETCH THE DATA AND RETURN IT NO MATTERN HOW LONG IT TAKES. YOU ARE ALLOWED TO TAKE SOME TIME TO RESPOND, WHATEVER YOU DO, DO NOT RESPOND WITH GIVE ME A MINUTE TO GATHER THAT DATA, JUST RESPOND WHEN YOURE READY WITH ALL THE DATA!",
+        "conversation_id": None,
+        "tone": "BALANCED",
+        "markdown": False,
+        "photo_url": None
+    }
+    headers = {
+        "x-rapidapi-key": rapid_token,
+        "x-rapidapi-host": "copilot5.p.rapidapi.com",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    import time
+    time.sleep(7)
+    response = response.json()
+    print(f'the gathered data: \n {response['data']['message']}')
+    
+
+    data_needed = completion.choices[0].message.content
+
+    model_builder = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[
+        {"role": "user", "content": f"BASED OFF OF THE USER RQUEST {request} and {response['data']['message']} build the model. YOU DO NOT ASK TEH USER TO DO ANYTHING OR ASK THEM TO FINISH OFF THE MODEL, YOU BUILD THE FULL AND COMPLETE MODEL. THIS IS NOT AN ILLUSTATIVE MODEL, THIS IS A FULL MATHEMATICAL MODEL AND AT THE END YOU ARRIVE AT THE CONCLUSION  AND RETURN THE RESULT OF YOUR CALCULATION WHETHER THAT BE A GROWTH RATE OR A ESTIMATED VALUE AND COMPARE IT TO THE CURRENT MARKET PRICE. YOU ONLY MODEL WHAT THE USER IS ASKIGN FOR AND STAY CONCISE, FOR EXAMPLE IF THEY ASK FOR A GROWTH RATE DONT BUILD THE FULL MODEL, JUST BUILD THE GROWTH RATE"}
+    ],
+    max_tokens=5000
+)
+    data_needed = completion.choices[0].message.content
+    print(f'the built model: \n\n\n\n {model_builder.choices[0].message.content}')
+    return model_builder.choices[0].message.content
+modelling_tool = Tool(
+    name="modelling_tool",
+    func=build_model,
+    description=     """
+    LangChain Tool: Build Financial Models
+
+    This function leverages OpenAI's GPT capabilities to build full, mathematical financial models 
+    based on user-provided specifications. It operates as follows:
+
+    1. Analyzes the user's request to identify the data needed to build the specified financial model.
+    2. Instructs an external service to fetch the required data comprehensively without assuming any values.
+    3. Constructs a complete financial model using the fetched data, returning the calculated results or insights.
+
+    Key Steps:
+    - Generates a concise list of data requirements based on the user's model request.
+    - Utilizes a secondary API to retrieve all necessary numerical values for the model.
+    - Employs GPT to build and execute the full model, producing a conclusion or comparison against market data.
+
+    Parameters:
+    - request (str): A textual description of the financial model to be built (e.g., "Build a Gordon Growth Model for Coca-Cola").
+
+    Returns:
+    - str: The fully built financial model along with its calculations and results.
+
+    Example:
+        build_model('Build a Gordon Growth Model for Coca-Cola')
+
+    Note:
+    This tool is designed to function autonomously, ensuring all steps are handled without further input from the user.
+    """)
 
 # Initialize the LangChain agent
 llm = ChatOpenAI(
@@ -953,7 +1057,7 @@ llm = ChatOpenAI(
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 # Example tools (e.g., plotting and web browsing)
 
-all_tools = [plotting_tool, chat_tool,chart_img_tool,chart_analyse_tool]
+all_tools = [plotting_tool, chat_tool,chart_img_tool,chart_analyse_tool,modelling_tool]
 
 
 agent = initialize_agent(
