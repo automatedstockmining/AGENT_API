@@ -999,7 +999,7 @@ def build_model(request):
     import time
     time.sleep(7)
     response = response.json()
-    print(f'the gathered data: \n {response['data']['message']}')
+    
     
 
     data_needed = completion.choices[0].message.content
@@ -1012,7 +1012,6 @@ def build_model(request):
     max_tokens=5000
 )
     data_needed = completion.choices[0].message.content
-    print(f'the built model: \n\n\n\n {model_builder.choices[0].message.content}')
     return model_builder.choices[0].message.content
 modelling_tool = Tool(
     name="modelling_tool",
