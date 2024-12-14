@@ -963,8 +963,6 @@ def build_model(request):
     Returns:
     - str: The fully built financial model along with its calculations and results.
 
-    Example:
-        build_model('Build a Gordon Growth Model for Coca-Cola')
 
     Note:
     This tool is designed to function autonomously, ensuring all steps are handled without further input from the user.
@@ -1007,7 +1005,7 @@ def build_model(request):
     model_builder = client.chat.completions.create(
     model="gpt-4o",
     messages=[
-        {"role": "user", "content": f"BASED OFF OF THE USER RQUEST {request} and {response['data']['message']} build the model. YOU DO NOT ASK TEH USER TO DO ANYTHING OR ASK THEM TO FINISH OFF THE MODEL, YOU BUILD THE FULL AND COMPLETE MODEL. THIS IS NOT AN ILLUSTATIVE MODEL, THIS IS A FULL MATHEMATICAL MODEL AND AT THE END YOU ARRIVE AT THE CONCLUSION  AND RETURN THE RESULT OF YOUR CALCULATION WHETHER THAT BE A GROWTH RATE OR A ESTIMATED VALUE AND COMPARE IT TO THE CURRENT MARKET PRICE. YOU ONLY MODEL WHAT THE USER IS ASKIGN FOR AND STAY CONCISE, FOR EXAMPLE IF THEY ASK FOR A GROWTH RATE DONT BUILD THE FULL MODEL, JUST BUILD THE GROWTH RATE. DO NOT RESPOND IN MARKDOWN, JUST FORMATTED TEXT BUT INCLUDE ALL THE CALCULATIONS AND GIVE ALL YOUR WORKING AND COME TO A COCNLUSION"}
+        {"role": "user", "content": f"BASED OFF OF THE USER RQUEST {request} and {response['data']['message']} build the model. YOU DO NOT ASK TEH USER TO DO ANYTHING OR ASK THEM TO FINISH OFF THE MODEL, YOU BUILD THE FULL AND COMPLETE MODEL. THIS IS NOT AN ILLUSTATIVE MODEL, THIS IS A FULL MATHEMATICAL MODEL AND AT THE END YOU ARRIVE AT THE CONCLUSION  AND RETURN THE RESULT OF YOUR CALCULATION WHETHER THAT BE A GROWTH RATE OR A ESTIMATED VALUE AND COMPARE IT TO THE CURRENT MARKET PRICE. YOU ONLY MODEL WHAT THE USER IS ASKIGN FOR AND STAY CONCISE, FOR EXAMPLE IF THEY ASK FOR A GROWTH RATE DONT BUILD THE FULL MODEL, JUST BUILD THE GROWTH RATE. DO NOT RESPOND IN MARKDOWN, JUST FORMATTED TEXT BUT INCLUDE ALL THE CALCULATIONS AND GIVE ALL YOUR WORKING AND COME TO A COCNLUSION. Present formulas and results in a cleaner format (e.g., with proper inline equations or tables) would improve readability."}
     ],
     max_tokens=5000
 )
@@ -1037,8 +1035,6 @@ modelling_tool = Tool(
     Returns:
     - str: The fully built financial model along with its calculations and results.
 
-    Example:
-        build_model('Build a Gordon Growth Model for Coca-Cola')
 
     Note:
     This tool is designed to function autonomously, ensuring all steps are handled without further input from the user.
