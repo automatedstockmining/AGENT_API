@@ -998,8 +998,6 @@ def build_model(request):
     import time
     time.sleep(10)
     response = response.json()
-    print(f'the gathered data: \n\n\n\n\n {response['data']['message']}')
-    
 
     data_needed = completion.choices[0].message.content
 
