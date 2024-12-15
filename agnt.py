@@ -173,7 +173,6 @@ rapid_token = os.getenv('RAPID_TOKEN')
 import json
 @tool()
 def chat(query):
-
     """
     USE THIS FOR EVERY QUERY, IT HAS ACCESS TO DATA AND PROVIDES AN ACCURATE RESPONSE
     
@@ -187,8 +186,19 @@ def chat(query):
     import http.client
 
     conn = http.client.HTTPSConnection("copilot5.p.rapidapi.com")
-    rapid_token = os.getenv('RAPID_TOKEN')
-    payload = "{{\"message\":\"{a} {b}\",\"conversation_id\":null,\"tone\":\"BALANCED\",\"markdown\":false,\"photo_url\":null}}".format(a = query, b = 'respond in a concise way with the data that i have asked for, never leave out any data if i ask you for multiple data points you search for them and return them')
+    rapid_token = '050964ec8bmshcc36033df0bbc84p1575fcjsn1419967cc298'
+
+    # Create a Python dictionary for the payload
+    payload = {
+        "message": f"{query} -- respond in a concise way with the data that i have asked for, never leave out any data if i ask you for multiple data points you search for them and return them",
+        "conversation_id": None,
+        "tone": "BALANCED",
+        "markdown": False,
+        "photo_url": None
+    }
+
+    # Convert the dictionary to a JSON string
+    payload_json = json.dumps(payload)
 
     headers = {
         'x-rapidapi-key': rapid_token,
@@ -196,17 +206,19 @@ def chat(query):
         'Content-Type': "application/json"
     }
 
-    conn.request("POST", "/copilot", payload, headers)
+    # Send the POST request
+    conn.request("POST", "/copilot", payload_json, headers)
 
+    # Get the response
     res = conn.getresponse()
     data = res.read()
     
+    # Decode and parse the JSON response
     response = data.decode("utf-8")
-    print(f'before json: {response} ')
+    print(f'before json: {response}')
     response = json.loads(response)
 
     return str(response['data']['message'])
-
 chat_tool = Tool(
     name="chat",
     func=chat,
