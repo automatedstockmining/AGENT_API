@@ -838,7 +838,7 @@ def financial_charting(request):
     model="gpt-4o-mini",
     temperature=0,
     messages=[
-        {"role": "user", "content": f"Based on the following request: '{request}', determine the technical indicators directly needed for the chart choose from {technical_indicators}. Return only the exact names of the indicators spaced by a , (e.g., 'Volatility Index') with no explanation or additional text. ALWAYS RETURN THE VOLUME ALONG WITH THE INDICATORS THEY ASK FOR. ONLY RETURN THE INDICATORS THEY ASK FOR. IF THEY DONT EXPLICITLY ASK FOR TECHNCIAL INDICATORS RETURN ABSOLUTELY NOTHING, AND ONLY RETRUN TECHNICAL INDICATORS FROM THE LIST, MAKE NONE UP YOURSELF. ONLY UP TO FIVE INDICATORS ARE ALLOWED, NO MORE! "}
+        {"role": "user", "content": f"Based on the following request: '{request}', determine the technical indicators directly needed for the chart choose from {technical_indicators}. Return only the exact names of the indicators spaced by a , (e.g., 'Volatility Index') with no explanation or additional text. ALWAYS RETURN THE VOLUME ALONG WITH THE INDICATORS THEY ASK FOR. ONLY RETURN THE INDICATORS THEY ASK FOR. IF THEY DONT EXPLICITLY ASK FOR TECHNCIAL INDICATORS RETURN ABSOLUTELY NOTHING, AND ONLY RETRUN TECHNICAL INDICATORS FROM THE LIST, MAKE NONE UP YOURSELF. ONLY UP TO 24 INDICATORS ARE ALLOWED, NO MORE! "}
     ]
     )
     final_resp = go_completion.choices[0].message.content
