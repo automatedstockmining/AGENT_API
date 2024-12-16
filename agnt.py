@@ -1081,26 +1081,55 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from langchain.memory import ConversationBufferMemory
+from langchain.agents import initialize_agent, AgentType
+from langchain.chat_models import ChatOpenAI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
 # Initialize FastAPI
 app = FastAPI()
+
 # CORS Configuration
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins
-    allow_credentials=True,  # Allow cookies or Authorization headers if needed
+    allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
+
 # Define the input model
 class Query(BaseModel):
+    user_id: str  # Add user_id to the input
     message: str
+
+# Initialize the LangChain agent model
+llm = ChatOpenAI(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    temperature=0,
+    model="gpt-4o-mini",
+)
+
+# Example tools (e.g., plotting and web browsing)
+all_tools = [plotting_tool, chat_tool, chart_img_tool, chart_analyse_tool, modelling_tool]
+
+# Dictionary to store user-specific memories
+user_memory_store = {}
+
+def get_or_create_memory(user_id):
+    """Retrieve or create conversation memory for a user."""
+    if user_id not in user_memory_store:
+        user_memory_store[user_id] = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    return user_memory_store[user_id]
 
 @app.post("/chat")
 async def chat(query: Query):
     """
     Endpoint to interact with the LangChain agent.
     Input:
+      - user_id: Unique user identifier
       - message: User's input query
     Output:
       - response: Agent's response to the query
@@ -1112,23 +1141,35 @@ async def chat(query: Query):
         return updated_text
 
     try:
+        # Retrieve or create memory for the user
+        user_memory = get_or_create_memory(query.user_id)
+        
+        # Initialize the LangChain agent with the user's memory
+        agent = initialize_agent(
+            tools=all_tools,
+            llm=llm,
+            agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+            memory=user_memory,
+            verbose=True,
+            handle_parsing_errors=True,
+        )
+        
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
         
         print(f'before cutting: {response}')
         if response.endswith("```"):
-            
             response = re.sub(r'```$', '', response)
             print(f'after cutting: {response}')
-            response = add_exclamation_to_links(response)
-            return {"response": response}
-        else:
-            response = add_exclamation_to_links(response)
-            return {"response": response}
+        
+        # Add exclamation to links in the response
+        response = add_exclamation_to_links(response)
+        return {"response": response}
 
     except Exception as e:
         # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the AGENT_API!"}
