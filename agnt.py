@@ -1090,61 +1090,42 @@ from pydantic import BaseModel
 # Initialize FastAPI
 app = FastAPI()
 
-# CORS Configuration
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
-)
+# In-memory dictionary to store memory for each user
+user_memory_store = {}
+
+# Function to get or create a memory for a user
+def get_or_create_memory(user_id):
+    if user_id not in user_memory_store:
+        # Create a new memory instance if not already stored
+        user_memory_store[user_id] = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    return user_memory_store[user_id]
 
 # Define the input model
 class Query(BaseModel):
-    user_id: str  # Add user_id to the input
-    message: str
+    user_id: str  # Unique identifier for the user
+    message: str  # User's input message
 
-# Initialize the LangChain agent model
-llm = ChatOpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
-    temperature=0,
-    model="gpt-4o-mini",
-)
+# Initialize the language model
+llm = ChatOpenAI(api_key=os.getenv('OPENAI_API_KEY'), temperature=0, model="gpt-4o-mini")
 
-# Example tools (e.g., plotting and web browsing)
+# Define the tools for the agent
 all_tools = [plotting_tool, chat_tool, chart_img_tool, chart_analyse_tool, modelling_tool]
-
-# Dictionary to store user-specific memories
-user_memory_store = {}
-
-def get_or_create_memory(user_id):
-    """Retrieve or create conversation memory for a user."""
-    if user_id not in user_memory_store:
-        user_memory_store[user_id] = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    return user_memory_store[user_id]
 
 @app.post("/chat")
 async def chat(query: Query):
     """
-    Endpoint to interact with the LangChain agent.
+    Handle chat requests.
     Input:
-      - user_id: Unique user identifier
+      - user_id: Unique identifier for the user
       - message: User's input query
     Output:
       - response: Agent's response to the query
     """
-    import re
-    def add_exclamation_to_links(text):
-        # Regex to find [text](url) patterns and add '!' in front of the square brackets
-        updated_text = re.sub(r'(\[.*?\]\(.*?\))', r'!\1', text)
-        return updated_text
-
     try:
-        # Retrieve or create memory for the user
+        # Get or create memory for the given user
         user_memory = get_or_create_memory(query.user_id)
         
-        # Initialize the LangChain agent with the user's memory
+        # Initialize the agent with user-specific memory
         agent = initialize_agent(
             tools=all_tools,
             llm=llm,
@@ -1156,18 +1137,8 @@ async def chat(query: Query):
         
         # Run the user query through the LangChain agent
         response = agent.run(query.message)
-        
-        print(f'before cutting: {response}')
-        if response.endswith("```"):
-            response = re.sub(r'```$', '', response)
-            print(f'after cutting: {response}')
-        
-        # Add exclamation to links in the response
-        response = add_exclamation_to_links(response)
         return {"response": response}
-
     except Exception as e:
-        # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
