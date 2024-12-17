@@ -1043,17 +1043,6 @@ modelling_tool = Tool(
     This tool is designed to function autonomously, ensuring all steps are handled without further input from the user.
     """)
 
-# Initialize the LangChain agent
-llm = ChatOpenAI(
-    api_key=key,
-    temperature=0,
-    model="gpt-4o-mini",
-    
-    
-)
-
-all_tools = [plotting_tool, chat_tool,chart_img_tool,chart_analyse_tool,modelling_tool]
-
 def interact_with_agent(user_input):
     try:
         response = agent.run(f'{user_input}, remember to use web browse tool ')
@@ -1105,26 +1094,32 @@ async def chat(query: Query, response: Response, memory_id: str | None = Cookie(
         memory_id = uuid4()
         response.set_cookie(key="memory_id", value=memory_id)
 
-        conv_memory = ConversationBufferMemory(memory_key=str(memory_id), return_messages=True)
-        AGENTS[memory_id] = {
-            "memory": conv_memory,
-            "agent": initialize_agent(
-                tools=all_tools,
-                llm=llm,
-                agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-                memory=conv_memory,
-                verbose = True,
-                handle_parsing_errors=True
-            )
-        }
+        # Initialize the LangChain agent
+        llm = ChatOpenAI(
+            api_key=key,
+            temperature=0,
+            model="gpt-4o-mini",
+        )
 
-    print("\nMemory Id:", memory_id)
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        # Example tools (e.g., plotting and web browsing)
 
-    
+        all_tools = [plotting_tool, chat_tool,chart_img_tool,chart_analyse_tool,modelling_tool]
+
+        agent = initialize_agent(
+            tools=all_tools,
+            llm=llm,
+            agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+            memory=memory,
+            verbose = True,
+            handle_parsing_errors=True
+        )
+
+        AGENTS[memory_id] = agent
 
     try:
         # Run the user query through the LangChain agent
-        response = AGENTS[memory_id]["agent"].run(query.message)
+        response = AGENTS[memory_id].run(query.message)
         
         print(f'before cutting: {response}')
         if response.endswith("```"):
