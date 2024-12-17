@@ -1120,7 +1120,7 @@ async def chat(query: Query, response: Response, memory_id: str | None = Cookie(
 
     print("\nMemory Id:", memory_id)
 
-    return {"response": "ok"}
+    
 
     try:
         # Run the user query through the LangChain agent
