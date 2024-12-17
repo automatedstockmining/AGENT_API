@@ -1052,20 +1052,7 @@ llm = ChatOpenAI(
     
 )
 
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-# Example tools (e.g., plotting and web browsing)
-
 all_tools = [plotting_tool, chat_tool,chart_img_tool,chart_analyse_tool,modelling_tool]
-
-
-agent = initialize_agent(
-    tools=all_tools,
-    llm=llm,
-    agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-    memory=memory,
-    verbose = True,
-    handle_parsing_errors=True
-)
 
 def interact_with_agent(user_input):
     try:
@@ -1078,8 +1065,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 # Initialize FastAPI
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response, Cookie
 from pydantic import BaseModel
+from uuid import uuid4
+
+AGENTS = {}
 
 # Initialize FastAPI
 app = FastAPI()
@@ -1097,7 +1087,7 @@ class Query(BaseModel):
     message: str
 
 @app.post("/chat")
-async def chat(query: Query):
+async def chat(query: Query, response: Response, memory_id: str | None = Cookie(default=None)):
     """
     Endpoint to interact with the LangChain agent.
     Input:
@@ -1111,9 +1101,30 @@ async def chat(query: Query):
         updated_text = re.sub(r'(\[.*?\]\(.*?\))', r'!\1', text)
         return updated_text
 
+    if memory_id is None:
+        memory_id = uuid4()
+        response.set_cookie(key="memory_id", value=memory_id)
+
+        conv_memory = ConversationBufferMemory(memory_key=str(memory_id), return_messages=True)
+        AGENTS[memory_id] = {
+            "memory": conv_memory,
+            "agent": initialize_agent(
+                tools=all_tools,
+                llm=llm,
+                agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+                memory=conv_memory,
+                verbose = True,
+                handle_parsing_errors=True
+            )
+        }
+
+    print("\nMemory Id:", memory_id)
+
+    return {"response": "ok"}
+
     try:
         # Run the user query through the LangChain agent
-        response = agent.run(query.message)
+        response = AGENTS[memory_id]["agent"].run(query.message)
         
         print(f'before cutting: {response}')
         if response.endswith("```"):
