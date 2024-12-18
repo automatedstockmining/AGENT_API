@@ -11,7 +11,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain.memory import ConversationBufferMemory
-from googlesearch import search
+
 import requests
 import trafilatura
 import openai
@@ -145,7 +145,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 from langchain.memory import ConversationBufferMemory
-from googlesearch import search
+
 import requests
 import trafilatura
 import openai
@@ -1078,7 +1078,11 @@ app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://jazzy-faloodeh-7e3d4d.netlify.app/"
+    ],
     allow_credentials=True,  # Allow cookies or Authorization headers if needed
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -1113,7 +1117,7 @@ async def chat(query: Query, response: Response, memory_id: str | None = Cookie(
 
         if memory_id is None:
             memory_id = str(uuid4())
-            response.set_cookie(key="memory_id", value=memory_id)
+            response.set_cookie(key="memory_id", value=memory_id, samesite="none", secure=True)
 
         agent = initialize_agent(
             tools=all_tools,
@@ -1139,6 +1143,7 @@ async def chat(query: Query, response: Response, memory_id: str | None = Cookie(
             return {"response": response}
 
     except Exception as e:
+        print(e)
         # Handle exceptions and return an error response
         raise HTTPException(status_code=500, detail=str(e))
 @app.get("/")
