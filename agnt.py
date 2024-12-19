@@ -1081,7 +1081,6 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:8000",
-        "https://teal-caramel-0787cb.netlify.app/"
     ],
     allow_credentials=True,  # Allow cookies or Authorization headers if needed
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
@@ -1096,6 +1095,13 @@ def get_session_history(session_id: str):
     if session_id not in store:
         store[session_id] = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     return store[session_id]
+
+@app.post("/clear")
+async def clear(memory_id: str | None = Cookie(default=None)):
+    global store
+    if (memory_id is not None) and (memory_id in store):
+        store.pop(memory_id)
+    return {"success": True}
 
 @app.post("/chat")
 async def chat(query: Query, response: Response, memory_id: str | None = Cookie(default=None)):
@@ -1124,7 +1130,7 @@ async def chat(query: Query, response: Response, memory_id: str | None = Cookie(
             llm=llm,
             agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
             memory=get_session_history(memory_id),
-            verbose = True,
+            verbose = False,
             handle_parsing_errors=True,
         )
 
