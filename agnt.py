@@ -1079,6 +1079,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://rad-pie-173752.netlify.app",
 
         "https://polite-buttercream-fe731f.netlify.app",
         "http://localhost:3000",
