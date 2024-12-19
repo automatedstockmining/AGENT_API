@@ -1079,7 +1079,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://illustrious-lokum-bea868.netlify.app"
+        "https://illustrious-lokum-bea868.netlify.app",
         "http://localhost:3000",
         "http://localhost:8000",
     ],
