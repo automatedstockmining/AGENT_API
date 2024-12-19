@@ -1079,9 +1079,10 @@ from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+
+        "https://polite-buttercream-fe731f.netlify.app",
         "http://localhost:3000",
         "http://localhost:8000",
-        "https://polite-buttercream-fe731f.netlify.app",
         "https://agent-api-1-9y8v.onrender.com"
     ],
     allow_credentials=True,  # Allow cookies or Authorization headers if needed
