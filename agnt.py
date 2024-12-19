@@ -1081,6 +1081,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:8000",
+        "https://eclectic-pudding-6d0d86.netlify.app"
     ],
     allow_credentials=True,  # Allow cookies or Authorization headers if needed
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
